@@ -1,0 +1,7 @@
+{
+  "_note": "Stub untuk macOS. Belum dipakai di MVP. Diisi saat port ke macOS (lihat docs/ROADMAP.md v0.6).",
+  "schema_version": 1,
+  "os": "macos",
+  "rules": [],
+  "category_extensions": {}
+}

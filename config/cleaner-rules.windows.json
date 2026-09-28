@@ -1,0 +1,60 @@
+{
+  "_note": "Aturan pembersih Windows. Data, bukan kode. Semua path tetap divalidasi oleh safety.rs (denylist, allowed roots, symlink).",
+  "schema_version": 1,
+  "os": "windows",
+  "rules": [
+    {
+      "id": "user-temp",
+      "name": "File sementara pengguna",
+      "description": "File di folder Temp pengguna yang sudah lama tidak diubah.",
+      "risk": "low",
+      "default_checked": true,
+      "allowed_roots": ["%TEMP%"],
+      "match": {
+        "type": "files_in_root",
+        "recursive": true,
+        "min_age_days": 3
+      },
+      "action": "trash"
+    },
+    {
+      "id": "old-installers",
+      "name": "Installer lama di Downloads",
+      "description": "File installer/arsip besar di Downloads yang tidak disentuh lebih dari 30 hari.",
+      "risk": "low",
+      "default_checked": true,
+      "allowed_roots": ["%USERPROFILE%\\Downloads"],
+      "match": {
+        "type": "files_in_root",
+        "recursive": false,
+        "extensions": [".exe", ".msi", ".zip", ".iso", ".7z", ".rar"],
+        "min_age_days": 30
+      },
+      "action": "trash"
+    },
+    {
+      "id": "stale-node-modules",
+      "name": "node_modules lama",
+      "description": "Folder node_modules di project yang tidak diubah lebih dari 60 hari. Bisa dibuat ulang dengan npm install.",
+      "risk": "medium",
+      "default_checked": false,
+      "allowed_roots": ["%USERPROFILE%"],
+      "match": {
+        "type": "named_directory",
+        "directory_name": "node_modules",
+        "project_marker_file": "package.json",
+        "min_age_days": 60
+      },
+      "action": "trash"
+    }
+  ],
+  "category_extensions": {
+    "video": [".mp4", ".mov", ".mkv", ".avi", ".webm", ".prproj"],
+    "photo": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".raw", ".psd"],
+    "audio": [".mp3", ".wav", ".flac", ".aac", ".m4a"],
+    "document": [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt"],
+    "archive": [".zip", ".rar", ".7z", ".tar", ".gz"],
+    "installer": [".exe", ".msi", ".iso", ".dmg"],
+    "code": [".js", ".ts", ".rs", ".py", ".json", ".html", ".css"]
+  }
+}
