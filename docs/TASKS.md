@@ -3,11 +3,11 @@
 Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria terpenuhi.
 
 ## M0 — Setup proyek
-- [ ] Inisialisasi Tauri 2 + React + TypeScript + Vite (nama app: DiskLens)
-- [ ] Susun struktur folder sesuai `CLAUDE.md`
-- [ ] Atur lint/format: clippy, rustfmt, eslint, prettier, script `typecheck`
-- [ ] Halaman kosong dengan judul, jalan di `npm run tauri dev`
-- [ ] Satu command contoh (`ping`) + wrapper `api.ts` untuk membuktikan alur invoke
+- [x] Inisialisasi Tauri 2 + React + TypeScript + Vite (nama app: DiskLens)
+- [x] Susun struktur folder sesuai `CLAUDE.md`
+- [x] Atur lint/format: clippy, rustfmt, eslint, prettier, script `typecheck`
+- [x] Halaman kosong dengan judul, jalan di `npm run tauri dev`
+- [x] Satu command contoh (`ping`) + wrapper `api.ts` untuk membuktikan alur invoke
 **Selesai jika:** app terbuka di Windows, tombol memanggil Rust dan menampilkan jawabannya, lint bersih.
 
 ## M1 — Inti scanner (tanpa UI rumit)

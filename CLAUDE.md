@@ -9,7 +9,8 @@ Owner is a solo developer (Indonesian speaker, comfortable with JavaScript/TypeS
 ## Stack
 - Tauri 2 (Rust backend) + React + TypeScript + Vite frontend
 - Rust crates (propose before adding others): `jwalk` or `walkdir` (traversal), `rayon`, `serde`/`serde_json`, `sysinfo` (drive info), `trash` (send to Recycle Bin/Trash), `dirs` (known folders), `thiserror`, `tracing`
-- Frontend: React + TS, plain CSS or Tailwind (ask before choosing), no heavy UI kits in MVP
+- Frontend: React + TS + Tailwind CSS v4 (decided, D-007), no heavy UI kits in MVP
+- Toolchain: Node >= 22.12 (24 LTS used), Rust stable (MSVC) — see D-008
 
 ## Platform policy
 - MVP target: **Windows**. Code must stay **cross-platform-ready** for macOS:
@@ -21,7 +22,8 @@ Owner is a solo developer (Indonesian speaker, comfortable with JavaScript/TypeS
 ## Project structure (target)
 ```
 src-tauri/src/
-  main.rs            # Tauri setup only
+  main.rs            # entry point only, calls disklens_lib::run()
+  lib.rs             # Tauri builder setup + module wiring (lib crate so tests run without Tauri)
   commands.rs        # #[tauri::command] handlers (thin)
   scanner/           # traversal, tree model, cancellation
   cleaner/           # rule loading, preview, execute (see SAFETY_RULES)
