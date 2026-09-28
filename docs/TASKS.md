@@ -28,7 +28,8 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - Windows melaporkan 744,8 GiB terpakai. Selisih ±26 GiB = folder sistem yang ditolak aksesnya, metadata NTFS, dan ukuran logis vs ukuran terpakai di disk (cluster slack, kompresi).
 - Hardlink (mis. `WinSxS`) terhitung lebih dari sekali; file cloud OneDrive dihitung ukuran logisnya walau belum diunduh.
 - Test symlink asli dilewati bila Developer Mode Windows mati; test junction selalu jalan.
-- UI beku atau tidak: dicek manual lewat `npm run tauri dev` (layar uji sementara `views/ScanDebug.tsx`).
+- Cek manual `npm run tauri dev` (2026-09-29, pemilik): scan `C:\` tidak membuat UI beku, Batal berfungsi, hasil tampil. Layar uji sementara `views/ScanDebug.tsx` diganti UI sungguhan di M2.
+- Jika `tauri dev` gagal dengan path lama `...\disklens\...`: cache build sisa rename, jalankan `cargo clean --manifest-path src-tauri/Cargo.toml --profile dev`.
 
 ## M2 — UI hasil scan
 - [ ] Beranda: kartu drive + tombol pilih folder
