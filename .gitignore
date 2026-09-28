@@ -6,3 +6,6 @@ src-tauri/target/
 Thumbs.db
 *.log
 .env
+dist-ssr/
+*.local
+src-tauri/gen/schemas/
