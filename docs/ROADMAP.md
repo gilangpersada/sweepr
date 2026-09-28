@@ -2,7 +2,7 @@
 
 Urutan ini usulan, bukan janji. Ubah sesuai apa yang benar-benar terpakai.
 
-## Fitur berikutnya untuk DiskLens
+## Fitur berikutnya untuk Sweepr
 
 | Versi | Fitur | Catatan |
 |---|---|---|
@@ -24,7 +24,7 @@ Urutan ini usulan, bukan janji. Ubah sesuai apa yang benar-benar terpakai.
 2. **Shopee Price & Stock Watcher** — pantau harga produk yang sudah direview; harga turun = momen bikin konten lagi. Bisa jadi lanjutan Affiliate Product Scout.
 3. **Content Performance Tracker** — rekap performa per video/produk (klik, komisi) dari spreadsheet atau ekspor, dengan grafik tren.
 4. **Pelanggan & Pengingat Galon** — catatan pelanggan langganan depot, pengingat kapan mereka biasanya habis, rekap pesanan harian.
-5. **Media Cleaner khusus creator** — turunan DiskLens: temukan render/rekaman lama per project video, arsipkan ke drive lain atau tandai aman dihapus.
+5. **Media Cleaner khusus creator** — turunan Sweepr: temukan render/rekaman lama per project video, arsipkan ke drive lain atau tandai aman dihapus.
 6. **Project Folder Organizer** — rapikan folder Downloads/Desktop otomatis berdasarkan aturan.
 
 ## Prinsip memilih berikutnya

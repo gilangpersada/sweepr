@@ -1,4 +1,4 @@
-# ARCHITECTURE — DiskLens MVP
+# ARCHITECTURE — Sweepr MVP
 
 ## Gambaran
 ```

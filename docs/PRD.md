@@ -1,9 +1,9 @@
-# PRD — DiskLens MVP
+# PRD — Sweepr MVP
 
-> Nama sementara. Versi: 0.1 (draft) · Platform: Windows · Pengguna awal: pembuat sendiri
+> Nama: Sweepr (D-010). Versi: 0.1 (draft) · Platform: Windows · Pengguna awal: pembuat sendiri
 
 ## 1. Ringkasan
-DiskLens memindai folder atau drive, menampilkan folder dan file mana yang paling memakan ruang, lalu membantu pengguna membebaskan ruang dengan cara yang aman. MVP fokus pada dua hal: **scan yang cepat dan jelas**, dan **pembersihan yang aman dan terbatas**.
+Sweepr memindai folder atau drive, menampilkan folder dan file mana yang paling memakan ruang, lalu membantu pengguna membebaskan ruang dengan cara yang aman. MVP fokus pada dua hal: **scan yang cepat dan jelas**, dan **pembersihan yang aman dan terbatas**.
 
 ## 2. Masalah
 - Drive penuh, tapi tidak jelas apa penyebabnya.
