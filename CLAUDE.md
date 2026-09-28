@@ -29,6 +29,7 @@ src-tauri/src/
   cleaner/           # rule loading, preview, execute (see SAFETY_RULES)
   platform/          # cfg-gated OS code (windows.rs, macos.rs)
   safety.rs          # protected paths + path validation
+  drives.rs          # list_drives via sysinfo
 src/                 # React app
   components/ views/ hooks/ lib/ (typed wrappers around invoke)
 config/              # cleaner rules per OS

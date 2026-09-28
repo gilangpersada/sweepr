@@ -26,8 +26,9 @@ struct Node {
     size: u64,                 // untuk folder = total isi (diagregasi)
     file_count: u32,           // hanya untuk folder
     modified: Option<i64>,     // unix seconds
-    children: Vec<NodeId>,     // hanya folder
-    ext_category: Option<CategoryId>,
+    first_child: Option<NodeId>,   // anak sebagai linked list (hemat ~16 byte/node dibanding Vec)
+    next_sibling: Option<NodeId>,
+    // ext_category: ditambah di M2 (ringkasan kategori)
 }
 ```
 - Simpan dalam **arena (`Vec<Node>`) + `NodeId`** supaya hemat memori dan tanpa referensi berputar.
@@ -40,26 +41,31 @@ struct Node {
 | `list_drives` | — | `Vec<DriveInfo>` |
 | `start_scan` | `path` | `scan_id` (progress lewat event) |
 | `cancel_scan` | `scan_id` | — |
-| `get_children` | `node_id`, `sort_by`, `limit`, `offset` | `Vec<NodeView>` |
-| `get_category_summary` | `node_id` | `Vec<CategorySize>` |
-| `get_largest_files` | `limit` | `Vec<NodeView>` |
+| `get_children` | `scan_id`, `node_id`, `sort_by` (size/name/modified/fileCount), `order` (asc/desc), `offset`, `limit` (maks 5000) | `ChildrenPage { total, items: Vec<NodeView> }` |
+| `get_category_summary` | `scan_id`, `node_id` | `Vec<CategorySize>` |
+| `get_largest_files` | `scan_id`, `limit` (maks 5000) | `Vec<FileView>` (`NodeView` + `path`) |
 | `reveal_in_explorer` | `node_id` | — |
 | `preview_cleanup` | `rule_ids` | `CleanupPreview` (items dengan `item_id`) |
 | `execute_cleanup` | `preview_id`, `item_ids` | `CleanupResult` |
 | `empty_recycle_bin` | — | `Result` |
 
-`NodeView` = versi ringan untuk UI: `id, name, is_dir, size, percent_of_parent, file_count, modified`.
+`NodeView` = versi ringan untuk UI: `id, name, is_dir, size, percent_of_parent, file_count, modified, has_children`.
+Semua command query menerima `scan_id`; ID node dari scan lama ditolak (`unknownScan`) supaya tidak tertukar dengan tree baru. Node root selalu `0`.
+Error command dikirim sebagai `{ code, message }` (`code` stabil untuk terjemahan UI).
 
 ## Event (backend → frontend)
-- `scan-progress`: `{ scan_id, files_seen, bytes_seen, current_path }` (di-throttle ±10x/detik)
-- `scan-finished`: `{ scan_id, total_bytes, total_files, skipped_count, elapsed_ms }`
-- `scan-failed` / `scan-cancelled`
+- `scan-progress`: `{ scanId, filesSeen, dirsSeen, bytesSeen, currentPath }` (di-throttle ±10x/detik)
+- `scan-finished`: `{ scanId, rootPath, rootId, totalBytes, totalFiles, nodeCount, skippedCount, elapsedMs }`
+- `scan-failed`: `{ scanId, error: { code, message } }` · `scan-cancelled`: `{ scanId }` (juga dikirim bila scan digantikan scan baru)
 
 ## Scanner
 - Gunakan traversal paralel (`jwalk`, atau `walkdir` + `rayon`).
 - Jangan ikuti symlink/junction (`follow_links(false)`, cek reparse point di Windows).
 - `AtomicBool` untuk pembatalan, dicek berkala.
-- Error akses → tambah ke daftar `skipped`, lanjut.
+- Error akses → tambah ke daftar `skipped`, lanjut. Folder yang tak terbaca tetap tampil (ukuran 0).
+- Root yang berupa symlink/junction ditolak (`isLink`). Symlink/junction di dalam tree tidak ditampilkan dan tidak dimasuki.
+- `jwalk` mengembalikan entry berurutan depth-first, jadi parent dilacak dengan stack per kedalaman (tanpa map path→id).
+- Ukuran = ukuran logis file (`len`), bukan ukuran terpakai di disk.
 - Agregasi ukuran folder dilakukan setelah traversal (bottom-up), bukan saat UI meminta.
 
 ## Cleaner

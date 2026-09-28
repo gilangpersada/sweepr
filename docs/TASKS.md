@@ -11,13 +11,24 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 **Selesai jika:** app terbuka di Windows, tombol memanggil Rust dan menampilkan jawabannya, lint bersih.
 
 ## M1 — Inti scanner (tanpa UI rumit)
-- [ ] `list_drives` (nama, total, terpakai, sisa)
-- [ ] Model tree berbasis arena + agregasi ukuran
-- [ ] Traversal paralel, tidak mengikuti symlink/junction
-- [ ] Progress via event (throttled), pembatalan, error akses dicatat
-- [ ] `get_children` (sort, limit, offset), `get_largest_files`
-- [ ] Unit test: agregasi ukuran, cancel, folder tak terbaca, symlink
+- [x] `list_drives` (nama, total, terpakai, sisa)
+- [x] Model tree berbasis arena + agregasi ukuran
+- [x] Traversal paralel, tidak mengikuti symlink/junction
+- [x] Progress via event (throttled), pembatalan, error akses dicatat
+- [x] `get_children` (sort, limit, offset), `get_largest_files`
+- [x] Unit test: agregasi ukuran, cancel, folder tak terbaca, symlink
 **Selesai jika:** scan folder uji (dibuat di test) menghasilkan ukuran benar; scan folder besar nyata tidak membuat UI beku; waktu scan & memori dicatat di catatan.
+
+**Catatan M1 (2026-09-29)** — build release, `cargo run --release --example scan_bench -- C:\`, Windows 11, 20 core logis:
+| Scan | Waktu | Node | File | Total | Dilewati | Memori puncak |
+|---|---|---|---|---|---|---|
+| `C:\` pertama (cache dingin) | 32,3 dtk | 1.076.247 | 960.815 | 718,3 GiB | 606 | ±189 MB (working set, sampel 200 ms) |
+| `C:\` ulang (cache hangat) | 13,1 dtk | sama | sama | sama | sama | — |
+
+- Windows melaporkan 744,8 GiB terpakai. Selisih ±26 GiB = folder sistem yang ditolak aksesnya, metadata NTFS, dan ukuran logis vs ukuran terpakai di disk (cluster slack, kompresi).
+- Hardlink (mis. `WinSxS`) terhitung lebih dari sekali; file cloud OneDrive dihitung ukuran logisnya walau belum diunduh.
+- Test symlink asli dilewati bila Developer Mode Windows mati; test junction selalu jalan.
+- UI beku atau tidak: dicek manual lewat `npm run tauri dev` (layar uji sementara `views/ScanDebug.tsx`).
 
 ## M2 — UI hasil scan
 - [ ] Beranda: kartu drive + tombol pilih folder
