@@ -1,4 +1,4 @@
-# DiskLens (working name)
+# Sweepr
 
 Aplikasi desktop untuk memindai penyimpanan PC, menunjukkan folder/file apa yang memakan ruang, dan membantu membebaskan ruang dengan aman.
 

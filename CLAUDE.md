@@ -1,4 +1,4 @@
-# CLAUDE.md — DiskLens
+# CLAUDE.md — Sweepr
 
 Read this file first in every session. Then read `docs/TASKS.md` to see the current milestone.
 
@@ -22,7 +22,7 @@ Owner is a solo developer (Indonesian speaker, comfortable with JavaScript/TypeS
 ## Project structure (target)
 ```
 src-tauri/src/
-  main.rs            # entry point only, calls disklens_lib::run()
+  main.rs            # entry point only, calls sweepr_lib::run()
   lib.rs             # Tauri builder setup + module wiring (lib crate so tests run without Tauri)
   commands.rs        # #[tauri::command] handlers (thin)
   scanner/           # traversal, tree model, cancellation

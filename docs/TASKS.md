@@ -3,7 +3,7 @@
 Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria terpenuhi.
 
 ## M0 — Setup proyek
-- [x] Inisialisasi Tauri 2 + React + TypeScript + Vite (nama app: DiskLens)
+- [x] Inisialisasi Tauri 2 + React + TypeScript + Vite (nama app: Sweepr)
 - [x] Susun struktur folder sesuai `CLAUDE.md`
 - [x] Atur lint/format: clippy, rustfmt, eslint, prettier, script `typecheck`
 - [x] Halaman kosong dengan judul, jalan di `npm run tauri dev`

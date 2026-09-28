@@ -1,4 +1,4 @@
-//! DiskLens backend: Tauri setup and module wiring.
+//! Sweepr backend: Tauri setup and module wiring.
 //! Logic lives in the modules below; `commands` stays a thin layer over them.
 
 mod cleaner;
