@@ -14,7 +14,12 @@ import {
 
 export type ScanState =
   | { status: "idle" }
-  | { status: "scanning"; scanId: ScanId | null; progress: ScanProgressEvent | null }
+  | {
+      status: "scanning";
+      path: string;
+      scanId: ScanId | null;
+      progress: ScanProgressEvent | null;
+    }
   | { status: "finished"; result: ScanFinishedEvent }
   | { status: "cancelled" }
   | { status: "failed"; error: ScanError };
@@ -54,7 +59,7 @@ export function useScan() {
     const subs = [
       onScanProgress((e) => {
         if (activeId.current === e.scanId) {
-          setState({ status: "scanning", scanId: e.scanId, progress: e });
+          setState((s) => (s.status === "scanning" ? { ...s, progress: e } : s));
         }
       }),
       onScanFinished((e) => handleFinal({ kind: "finished", e }, e.scanId)),
@@ -70,8 +75,14 @@ export function useScan() {
 
   const start = useCallback(async (path: string) => {
     activeId.current = null;
-    setState({ status: "scanning", scanId: null, progress: null });
-    const scanId = await startScan(path);
+    setState({ status: "scanning", path, scanId: null, progress: null });
+    let scanId: ScanId;
+    try {
+      scanId = await startScan(path);
+    } catch (e) {
+      setState({ status: "failed", error: { code: "io", message: String(e) } });
+      return;
+    }
     const early = earlyFinal.current.get(scanId);
     earlyFinal.current.clear();
     if (early) {
@@ -86,5 +97,8 @@ export function useScan() {
     if (activeId.current !== null) void cancelScan(activeId.current);
   }, []);
 
-  return { state, start, cancel };
+  /** Back to the idle state (e.g. "home"). The backend keeps the last result until the next scan. */
+  const reset = useCallback(() => setState({ status: "idle" }), []);
+
+  return { state, start, cancel, reset };
 }

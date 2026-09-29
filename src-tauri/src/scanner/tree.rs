@@ -12,6 +12,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
+use super::category::{Categories, CategoryId, CategorySize};
 use super::error::ScanError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -37,6 +38,8 @@ pub struct Node {
     pub file_count: u32,
     /// Last modified time, unix seconds.
     pub modified: Option<i64>,
+    /// File category by extension. Always `OTHER` for folders. One byte; fits in padding.
+    pub category: CategoryId,
     first_child: Option<NodeId>,
     next_sibling: Option<NodeId>,
 }
@@ -57,13 +60,15 @@ impl ScanTree {
             size: 0,
             file_count: 0,
             modified,
+            category: CategoryId::OTHER,
             first_child: None,
             next_sibling: None,
         };
         ScanTree { nodes: vec![root] }
     }
 
-    /// Appends a node under `parent`. `size` is the file's own size (ignored for folders).
+    /// Appends a node under `parent`. `size` and `category` are the file's own (ignored for
+    /// folders).
     pub fn push(
         &mut self,
         parent: NodeId,
@@ -71,6 +76,7 @@ impl ScanTree {
         is_dir: bool,
         size: u64,
         modified: Option<i64>,
+        category: CategoryId,
     ) -> NodeId {
         let id = NodeId(u32::try_from(self.nodes.len()).expect("more than u32::MAX entries"));
         let parent_node = &mut self.nodes[parent.index()];
@@ -83,6 +89,7 @@ impl ScanTree {
             size: if is_dir { 0 } else { size },
             file_count: 0,
             modified,
+            category: if is_dir { CategoryId::OTHER } else { category },
             first_child: None,
             next_sibling,
         });
@@ -211,6 +218,53 @@ impl ScanTree {
             .collect()
     }
 
+    /// Size per file category below `id` (recursive), largest first. Categories without
+    /// files are left out.
+    pub fn category_summary(
+        &self,
+        id: NodeId,
+        categories: &Categories,
+    ) -> Result<Vec<CategorySize>, ScanError> {
+        let start = self.get(id)?;
+        let mut totals = vec![(0u64, 0u32); categories.id_count()];
+        let mut add = |node: &Node| {
+            if let Some(t) = totals.get_mut(usize::from(node.category.0)) {
+                t.0 += node.size;
+                t.1 += 1;
+            }
+        };
+        if start.is_dir {
+            // Explicit stack instead of recursion: folder depth is unbounded.
+            let mut stack = vec![id];
+            while let Some(dir) = stack.pop() {
+                for c in self.children(dir) {
+                    let node = &self.nodes[c.index()];
+                    if node.is_dir {
+                        stack.push(c);
+                    } else {
+                        add(node);
+                    }
+                }
+            }
+        } else {
+            add(start);
+        }
+        let mut out: Vec<CategorySize> = totals
+            .into_iter()
+            .enumerate()
+            .filter(|&(_, (_, files))| files > 0)
+            .map(|(i, (size, file_count))| CategorySize {
+                key: categories
+                    .key(CategoryId(u8::try_from(i).unwrap_or(0)))
+                    .to_string(),
+                size,
+                file_count,
+            })
+            .collect();
+        out.sort_by(|a, b| b.size.cmp(&a.size).then_with(|| a.key.cmp(&b.key)));
+        Ok(out)
+    }
+
     pub fn view(&self, id: NodeId, parent_size: u64) -> NodeView {
         let n = &self.nodes[id.index()];
         NodeView {
@@ -301,16 +355,32 @@ mod tests {
     ///   big.iso 100
     ///   empty/
     fn sample() -> ScanTree {
+        let cats = categories();
+        let c = |name: &str| cats.classify(os(name));
         let mut t = ScanTree::new(os("root"), None);
-        let a = t.push(NodeId::ROOT, os("a"), true, 999, Some(1));
-        t.push(a, os("x.txt"), false, 10, Some(2));
-        t.push(a, os("y.txt"), false, 20, Some(3));
-        let b = t.push(a, os("b"), true, 0, None);
-        t.push(b, os("z.bin"), false, 5, None);
-        t.push(NodeId::ROOT, os("big.iso"), false, 100, Some(4));
-        t.push(NodeId::ROOT, os("empty"), true, 0, None);
+        let a = t.push(NodeId::ROOT, os("a"), true, 999, Some(1), c("a"));
+        t.push(a, os("x.txt"), false, 10, Some(2), c("x.txt"));
+        t.push(a, os("y.txt"), false, 20, Some(3), c("y.txt"));
+        let b = t.push(a, os("b"), true, 0, None, c("b"));
+        t.push(b, os("z.bin"), false, 5, None, c("z.bin"));
+        t.push(
+            NodeId::ROOT,
+            os("big.iso"),
+            false,
+            100,
+            Some(4),
+            c("big.iso"),
+        );
+        t.push(NodeId::ROOT, os("empty"), true, 0, None, c("empty"));
         t.aggregate();
         t
+    }
+
+    fn categories() -> Categories {
+        Categories::from_rules_json(
+            r#"{ "category_extensions": { "document": [".txt"], "installer": [".iso"] } }"#,
+        )
+        .unwrap()
     }
 
     fn find(t: &ScanTree, parent: NodeId, name: &str) -> NodeId {
@@ -378,6 +448,48 @@ mod tests {
         let z = find(&t, b, "z.bin");
         let expected: PathBuf = ["root", "a", "b", "z.bin"].iter().collect();
         assert_eq!(t.path(z).unwrap(), expected);
+    }
+
+    #[test]
+    fn category_summary_sums_subtree_by_category() {
+        let t = sample();
+        let cats = categories();
+        let row = |key: &str, size: u64, file_count: u32| CategorySize {
+            key: key.to_string(),
+            size,
+            file_count,
+        };
+        assert_eq!(
+            t.category_summary(NodeId::ROOT, &cats).unwrap(),
+            [
+                row("installer", 100, 1),
+                row("document", 30, 2),
+                row("other", 5, 1)
+            ]
+        );
+        let a = find(&t, NodeId::ROOT, "a");
+        assert_eq!(
+            t.category_summary(a, &cats).unwrap(),
+            [row("document", 30, 2), row("other", 5, 1)]
+        );
+        let empty = find(&t, NodeId::ROOT, "empty");
+        assert!(t.category_summary(empty, &cats).unwrap().is_empty());
+        // A single file summarizes itself.
+        let iso = find(&t, NodeId::ROOT, "big.iso");
+        assert_eq!(
+            t.category_summary(iso, &cats).unwrap(),
+            [row("installer", 100, 1)]
+        );
+        assert!(matches!(
+            t.category_summary(NodeId(999), &cats),
+            Err(ScanError::UnknownNode(999))
+        ));
+    }
+
+    #[test]
+    fn category_does_not_grow_node() {
+        // Guards the memory budget: ~1M nodes per drive scan.
+        assert!(std::mem::size_of::<Node>() <= 72);
     }
 
     #[test]

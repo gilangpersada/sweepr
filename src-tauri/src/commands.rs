@@ -6,8 +6,10 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
 use crate::drives::{self, DriveInfo};
+use crate::platform;
 use crate::scanner::{
-    ChildrenPage, FileView, NodeId, ScanError, ScanEvent, ScanId, ScanSessions, SortBy, SortOrder,
+    CategorySize, ChildrenPage, FileView, NodeId, ScanError, ScanEvent, ScanId, ScanSessions,
+    SortBy, SortOrder,
 };
 
 /// Upper bound for page sizes requested by the UI, so one call never ships a huge payload.
@@ -82,6 +84,44 @@ pub fn get_largest_files(
 ) -> Result<Vec<FileView>, ScanError> {
     let result = sessions.result(scan_id)?;
     Ok(result.tree.largest_files(limit.min(MAX_PAGE)))
+}
+
+/// File size per category (video, photo, ...) below a node.
+#[tauri::command]
+pub async fn get_category_summary(
+    sessions: State<'_, ScanSessions>,
+    scan_id: ScanId,
+    node_id: u32,
+) -> Result<Vec<CategorySize>, ScanError> {
+    // `async` so walking a whole-drive subtree never blocks the main thread.
+    let result = sessions.result(scan_id)?;
+    result
+        .tree
+        .category_summary(NodeId(node_id), &result.categories)
+}
+
+/// Full path of a node, for "copy path". Display only; never accepted back as input.
+#[tauri::command]
+pub fn get_node_path(
+    sessions: State<'_, ScanSessions>,
+    scan_id: ScanId,
+    node_id: u32,
+) -> Result<String, ScanError> {
+    let result = sessions.result(scan_id)?;
+    let path = result.tree.path(NodeId(node_id))?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
+/// Shows a node in Explorer. Takes a node id, not a path: the path comes from the scan tree.
+#[tauri::command]
+pub async fn reveal_in_explorer(
+    sessions: State<'_, ScanSessions>,
+    scan_id: ScanId,
+    node_id: u32,
+) -> Result<(), ScanError> {
+    let result = sessions.result(scan_id)?;
+    let path = result.tree.path(NodeId(node_id))?;
+    platform::reveal_in_file_manager(&path).map_err(|e| ScanError::from_io(path, e))
 }
 
 #[cfg(test)]

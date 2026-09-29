@@ -28,7 +28,7 @@ struct Node {
     modified: Option<i64>,     // unix seconds
     first_child: Option<NodeId>,   // anak sebagai linked list (hemat ~16 byte/node dibanding Vec)
     next_sibling: Option<NodeId>,
-    // ext_category: ditambah di M2 (ringkasan kategori)
+    category: CategoryId,      // u8, kategori ekstensi (M2); 0 = "other", selalu 0 untuk folder
 }
 ```
 - Simpan dalam **arena (`Vec<Node>`) + `NodeId`** supaya hemat memori dan tanpa referensi berputar.
@@ -42,9 +42,10 @@ struct Node {
 | `start_scan` | `path` | `scan_id` (progress lewat event) |
 | `cancel_scan` | `scan_id` | — |
 | `get_children` | `scan_id`, `node_id`, `sort_by` (size/name/modified/fileCount), `order` (asc/desc), `offset`, `limit` (maks 5000) | `ChildrenPage { total, items: Vec<NodeView> }` |
-| `get_category_summary` | `scan_id`, `node_id` | `Vec<CategorySize>` |
+| `get_category_summary` | `scan_id`, `node_id` | `Vec<CategorySize>` (`key, size, file_count`; `key` = nama kategori di config atau `other`) |
+| `get_node_path` | `scan_id`, `node_id` | `String` (hanya untuk tampilan/salin, tidak pernah diterima balik) |
 | `get_largest_files` | `scan_id`, `limit` (maks 5000) | `Vec<FileView>` (`NodeView` + `path`) |
-| `reveal_in_explorer` | `node_id` | — |
+| `reveal_in_explorer` | `scan_id`, `node_id` | — (path dihitung dari tree, D-015) |
 | `preview_cleanup` | `rule_ids` | `CleanupPreview` (items dengan `item_id`) |
 | `execute_cleanup` | `preview_id`, `item_ids` | `CleanupResult` |
 | `empty_recycle_bin` | — | `Result` |
@@ -67,6 +68,7 @@ Error command dikirim sebagai `{ code, message }` (`code` stabil untuk terjemaha
 - `jwalk` mengembalikan entry berurutan depth-first, jadi parent dilacak dengan stack per kedalaman (tanpa map path→id).
 - Ukuran = ukuran logis file (`len`), bukan ukuran terpakai di disk.
 - Agregasi ukuran folder dilakukan setelah traversal (bottom-up), bukan saat UI meminta.
+- Kategori file (video, foto, ...) ditentukan saat scan dari `category_extensions` di `config/cleaner-rules.<os>.json` (disematkan saat kompilasi, D-017). `get_category_summary` menjumlahkan subtree saat diminta.
 
 ## Cleaner
 1. `load_rules(os)` membaca `config/cleaner-rules.<os>.json`, memvalidasi skema.
@@ -77,9 +79,10 @@ Error command dikirim sebagai `{ code, message }` (`code` stabil untuk terjemaha
 ## Frontend
 - `src/lib/api.ts`: pembungkus bertipe untuk semua `invoke` dan `listen`.
 - `src/views/`: `Home`, `ScanResult`, `Cleaner`.
-- `src/components/`: `DriveCard`, `FolderTable`, `Breadcrumb`, `CategoryBar`, `ConfirmDialog`, `ProgressBanner`.
+- `src/components/`: `DriveCard`, `ProgressBanner`, `Breadcrumb`, `CategoryBar`, `FolderTable`, `LargestFiles`, `RowActions`, `VirtualList`, `icons`; `ConfirmDialog` menyusul di M3.
+- `src/hooks/`: `useScan` (siklus scan dari event), `useChildren` (isi folder per halaman 500 baris), `useAsync` (query sekali ambil).
 - State sederhana (React state/context); jangan tambah library state di MVP.
-- Tabel besar: gunakan windowing/virtual list jika > 500 baris.
+- Tabel memakai `VirtualList` (tinggi baris tetap, hanya baris terlihat di DOM) dan memuat `get_children` per halaman saat di-scroll (D-016).
 
 ## Cross-platform
 - Semua path memakai `PathBuf`. Kode OS di `platform/`.

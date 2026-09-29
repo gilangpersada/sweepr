@@ -121,6 +121,7 @@ fn cancel_during_scan_stops_early() {
     let cancel = Arc::new(AtomicBool::new(false));
     let opts = ScanOptions {
         progress_interval: Duration::ZERO,
+        ..Default::default()
     };
     let mut calls = 0;
     let flag = Arc::clone(&cancel);
@@ -143,6 +144,7 @@ fn progress_reports_growing_counts() {
     }
     let opts = ScanOptions {
         progress_interval: Duration::ZERO,
+        ..Default::default()
     };
     let mut seen = Vec::new();
     scan(dir.path(), Arc::new(AtomicBool::new(false)), &opts, |p| {
@@ -428,6 +430,7 @@ fn cancelling_a_session_emits_cancelled() {
     }
     let sessions = ScanSessions::new(ScanOptions {
         progress_interval: Duration::ZERO,
+        ..Default::default()
     });
     let (tx, rx) = mpsc::channel();
     let s = sessions.clone();
@@ -443,4 +446,36 @@ fn cancelling_a_session_emits_cancelled() {
         other => panic!("unexpected {other:?}"),
     }
     assert!(sessions.result(started).is_err());
+}
+
+#[test]
+fn scan_assigns_categories_from_config() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    write_file(&root.join("clip.MP4"), 300);
+    write_file(&root.join("sub/movie.mkv"), 200);
+    write_file(&root.join("sub/notes.txt"), 7);
+    // A folder named like a video must not count as one.
+    fs::create_dir_all(root.join("album.mp4")).unwrap();
+
+    let categories =
+        Categories::from_rules_json(r#"{ "category_extensions": { "video": [".mp4", ".mkv"] } }"#)
+            .unwrap();
+    let opts = ScanOptions {
+        categories: Arc::new(categories),
+        ..Default::default()
+    };
+    let r = match scan(root, Arc::new(AtomicBool::new(false)), &opts, |_| {}).unwrap() {
+        ScanOutcome::Completed(r) => r,
+        ScanOutcome::Cancelled => panic!("scan was cancelled"),
+    };
+    let summary = r
+        .tree
+        .category_summary(NodeId::ROOT, &r.categories)
+        .unwrap();
+    let rows: Vec<_> = summary
+        .iter()
+        .map(|c| (c.key.as_str(), c.size, c.file_count))
+        .collect();
+    assert_eq!(rows, [("video", 500, 2), ("other", 7, 1)]);
 }
