@@ -114,10 +114,10 @@ Kategori: Video 120 GB | Foto 30 GB | Arsip 18 GB | ...
 Nama            Ukuran     %      File   Diubah
 Videos          120 GB     48%    312    2 hari lalu
 node_modules... ...
-[Tab: Folder | File Terbesar | Pembersih]
+[Tab: Folder | File Terbesar]        [Pembersih]  ← layar sendiri (D-023)
 ```
 
-**Layar 3 — Pembersih**
+**Layar 3 — Pembersih** (dibuka dari Beranda atau header hasil scan)
 ```
 [x] File sementara      2.3 GB   Risiko: Rendah   [Lihat detail]
 [x] Installer lama      4.1 GB   Risiko: Rendah   [Lihat detail]

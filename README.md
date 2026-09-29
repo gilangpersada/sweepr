@@ -4,7 +4,7 @@ Aplikasi desktop untuk memindai penyimpanan PC, menunjukkan folder/file apa yang
 
 - **Platform MVP:** Windows 10/11 (struktur disiapkan untuk macOS)
 - **Stack:** Tauri 2 (Rust) + React + TypeScript + Vite
-- **Status:** Pra-MVP — M0 (setup), M1 (scanner), M2 (UI hasil scan) selesai; berikutnya M3 (pembersih aman)
+- **Status:** Pra-MVP — M0 (setup), M1 (scanner), M2 (UI hasil scan), M3 (pembersih aman) selesai; berikutnya M4 (poles & rilis pribadi)
 - **Prasyarat:** Node ≥ 22.12, Rust stable (MSVC), Visual Studio Build Tools (C++)
 
 ## Isi folder ini

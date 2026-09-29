@@ -10,9 +10,9 @@ Semua logika berat di Rust. UI hanya menampilkan data dan mengirim niat pengguna
 | Modul | Tanggung jawab |
 |---|---|
 | `scanner` | Traversal paralel, bangun tree in-memory, agregasi ukuran, cancel token |
-| `cleaner` | Muat rule JSON, buat preview, eksekusi (via `trash`), logging |
-| `safety` | Daftar path terlarang, validasi & kanonisasi path, cek symlink |
-| `platform` | Kode khusus OS (`windows.rs`, `macos.rs` stub): known folders, buka di explorer |
+| `cleaner` | Muat rule JSON, preview, eksekusi ke Recycle Bin (via `trash`), cek kapasitas Recycle Bin, log JSON lines |
+| `safety` | `SafetyPolicy`: denylist, allowed roots, kanonisasi, tolak link/reparse point |
+| `platform` | Kode khusus OS (`windows.rs`; `macos.rs` + `unix.rs` stub aman): denylist per OS, deteksi reparse point, buka di Explorer, info/kosongkan/kapasitas Recycle Bin |
 | `commands` | Handler `#[tauri::command]`, tipis, hanya panggil modul di atas |
 
 ## Model data (Rust)
@@ -46,9 +46,11 @@ struct Node {
 | `get_node_path` | `scan_id`, `node_id` | `String` (hanya untuk tampilan/salin, tidak pernah diterima balik) |
 | `get_largest_files` | `scan_id`, `limit` (maks 5000) | `Vec<FileView>` (`NodeView` + `path`) |
 | `reveal_in_explorer` | `scan_id`, `node_id` | — (path dihitung dari tree, D-015) |
-| `preview_cleanup` | `rule_ids` | `CleanupPreview` (items dengan `item_id`) |
-| `execute_cleanup` | `preview_id`, `item_ids` | `CleanupResult` |
-| `empty_recycle_bin` | — | `Result` |
+| `list_cleaner_rules` | — | `Vec<RuleInfo>` (`id, name, description, risk, default_checked`) |
+| `preview_cleanup` | `rule_ids` | `CleanupPreview { preview_id, max_items, rules: Vec<RulePreview> }`; tiap item punya `item_id` |
+| `execute_cleanup` | `preview_id`, `item_ids` | `CleanupResult { trashed_count, trashed_bytes, failed_count, items }`; item gagal membawa `error { code, message }` |
+| `get_recycle_bin_info` | — | `RecycleBinInfo { size_bytes, item_count }` |
+| `empty_recycle_bin` | — | — (permanen; UI wajib konfirmasi) |
 
 `NodeView` = versi ringan untuk UI: `id, name, is_dir, size, percent_of_parent, file_count, modified, has_children`.
 Semua command query menerima `scan_id`; ID node dari scan lama ditolak (`unknownScan`) supaya tidak tertukar dengan tree baru. Node root selalu `0`.
@@ -70,16 +72,26 @@ Error command dikirim sebagai `{ code, message }` (`code` stabil untuk terjemaha
 - Agregasi ukuran folder dilakukan setelah traversal (bottom-up), bukan saat UI meminta.
 - Kategori file (video, foto, ...) ditentukan saat scan dari `category_extensions` di `config/cleaner-rules.<os>.json` (disematkan saat kompilasi, D-017). `get_category_summary` menjumlahkan subtree saat diminta.
 
-## Cleaner
-1. `load_rules(os)` membaca `config/cleaner-rules.<os>.json`, memvalidasi skema.
-2. `preview_cleanup` memperluas variabel lingkungan, mencocokkan file sesuai filter (umur, ekstensi), menjalankan `safety::validate` pada tiap item, lalu menyimpan preview di memori dengan `preview_id`.
-3. `execute_cleanup` hanya menerima `preview_id` + `item_ids`; **tidak pernah** path mentah dari UI. Validasi ulang setiap path sebelum aksi, karena disk bisa berubah antara preview dan eksekusi.
-4. Aksi default: `trash::delete`. Tulis log (JSON lines) ke folder data aplikasi.
+## Safety (`safety.rs`)
+`SafetyPolicy` = denylist + pemeriksaan SAFETY_RULES. Dipakai dua kali per item: saat preview dan tepat sebelum aksi.
+- `validate(path, roots)`: harus absolut, tanpa `..`/`.`; bukan link/junction/reparse point apa pun; `canonicalize` harus sama dengan input (kalau beda, ada link di atasnya → `insideLink`); bukan root drive; bukan `$Recycle.Bin`/`System Volume Information`/`Recovery` di root drive; tidak diblokir denylist; **di dalam** (bukan sama dengan) salah satu allowed root.
+- Denylist (`platform::protected_paths`): `Subtree` (Windows, Program Files, ProgramData — selalu), `SubtreeUnlessExplicit` (Documents, Desktop, Pictures, Videos, Music, AppData\Roaming — isinya hanya boleh jika allowed root rule berada di/dalam folder itu; foldernya sendiri tidak pernah), `Exact` (folder home). Known folder dibaca via `dirs`, jadi yang dipindah ke OneDrive tetap terlindungi.
+- `resolve_root`: allowed root rule harus ada, bukan/tidak di dalam link, bukan root drive, dan tidak di dalam entri `Subtree`.
+- `may_descend`: walker tidak pernah masuk ke folder terlindungi.
+
+## Cleaner (`cleaner/`)
+1. `rules.rs`: memuat `config/cleaner-rules.<os>.json` yang disematkan (D-020) dengan validasi ketat — field asing ditolak, `action` hanya `trash`, `risk` hanya `low`/`medium` (medium tidak boleh dicentang default), `min_age_days ≥ 1`, id unik. `%VAR%` diekspansi (known folder via `dirs`, lalu env); variabel tak dikenal = error untuk root itu.
+2. `matcher.rs`: `files_in_root` (umur + ekstensi opsional, rekursif opsional) dan `named_directory` (`node_modules` + `package.json`, D-021). Walker tidak pernah mengikuti link dan tidak masuk folder terlindungi. Folder kandidat berisi link dikecualikan (D-022).
+3. `preview(rule_ids)`: kandidat → `safety::validate` (yang gagal tidak pernah ditampilkan, hanya dihitung `excludedCount`) → urut terbesar → maks 10.000 per rule → disimpan di memori dengan `preview_id` (hanya satu preview aktif; preview baru menggantikan yang lama).
+4. `execute(preview_id, item_ids)`: preview **dikonsumsi** (tidak bisa dipakai dua kali), ditolak jika > 30 menit atau > 10.000 item. Log dibuka dulu; kalau gagal, tidak ada aksi. Per item: `validate` ulang → `recheck` (fingerprint ukuran/waktu ubah harus sama, rule masih cocok) → cek Recycle Bin drive (D-019) → `trash::delete_all` per batch 100 (batch gagal diulang per item) → pastikan path sudah hilang. Setiap hasil langsung ditulis ke log.
+5. Log JSON lines: `<app_log_dir>/cleanup.jsonl` (Windows: `%LOCALAPPDATA%\com.sweepr.app\logs`). Field: `ts` (unix ms), `action` (`trash`/`emptyRecycleBin`), `previewId`, `ruleId`, `path`, `size`, `ok`, `reason`.
+6. `empty_recycle_bin` = `SHEmptyRecycleBinW` semua drive, tanpa dialog Windows (konfirmasi ada di UI), dicatat di log.
+7. Tes memakai `FakeTrasher` (trait `Trasher`) supaya tidak menyentuh Recycle Bin asli; `real_recycle_bin_round_trip` (`--ignored`) memverifikasi jalur asli dan membersihkan entrinya sendiri.
 
 ## Frontend
 - `src/lib/api.ts`: pembungkus bertipe untuk semua `invoke` dan `listen`.
 - `src/views/`: `Home`, `ScanResult`, `Cleaner`.
-- `src/components/`: `DriveCard`, `ProgressBanner`, `Breadcrumb`, `CategoryBar`, `FolderTable`, `LargestFiles`, `RowActions`, `VirtualList`, `icons`; `ConfirmDialog` menyusul di M3.
+- `src/components/`: `DriveCard`, `ProgressBanner`, `Breadcrumb`, `CategoryBar`, `FolderTable`, `LargestFiles`, `RowActions`, `VirtualList`, `icons`, `ConfirmDialog` (`<dialog>` bawaan), `RuleCard`, `RecycleBinPanel`, `CleanupResultView`.
 - `src/hooks/`: `useScan` (siklus scan dari event), `useChildren` (isi folder per halaman 500 baris), `useAsync` (query sekali ambil).
 - State sederhana (React state/context); jangan tambah library state di MVP.
 - Tabel memakai `VirtualList` (tinggi baris tetap, hanya baris terlihat di DOM) dan memuat `get_children` per halaman saat di-scroll (D-016).

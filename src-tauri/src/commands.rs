@@ -1,10 +1,14 @@
 //! `#[tauri::command]` handlers. Keep these thin: validate input, call a module, return data.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
+use crate::cleaner::{
+    Cleaner, CleanerError, CleanupPreview, CleanupResult, RecycleBinInfo, RuleInfo,
+};
 use crate::drives::{self, DriveInfo};
 use crate::platform;
 use crate::scanner::{
@@ -122,6 +126,57 @@ pub async fn reveal_in_explorer(
     let result = sessions.result(scan_id)?;
     let path = result.tree.path(NodeId(node_id))?;
     platform::reveal_in_file_manager(&path).map_err(|e| ScanError::from_io(path, e))
+}
+
+// ---------- cleaner ----------
+// The UI never sends paths here: only rule ids, a preview id and item ids from that preview.
+
+#[tauri::command]
+pub fn list_cleaner_rules(cleaner: State<'_, Arc<Cleaner>>) -> Result<Vec<RuleInfo>, CleanerError> {
+    cleaner.list_rules()
+}
+
+/// Finds what the given rules would clean. Can take a while (walks the user folder).
+#[tauri::command]
+pub async fn preview_cleanup(
+    cleaner: State<'_, Arc<Cleaner>>,
+    rule_ids: Vec<String>,
+) -> Result<CleanupPreview, CleanerError> {
+    blocking(&cleaner, move |c| c.preview(&rule_ids)).await
+}
+
+/// Moves the chosen items of a preview to the Recycle Bin.
+#[tauri::command]
+pub async fn execute_cleanup(
+    cleaner: State<'_, Arc<Cleaner>>,
+    preview_id: u64,
+    item_ids: Vec<u32>,
+) -> Result<CleanupResult, CleanerError> {
+    blocking(&cleaner, move |c| c.execute(preview_id, &item_ids)).await
+}
+
+#[tauri::command]
+pub async fn get_recycle_bin_info(
+    cleaner: State<'_, Arc<Cleaner>>,
+) -> Result<RecycleBinInfo, CleanerError> {
+    blocking(&cleaner, |c| c.recycle_bin_info()).await
+}
+
+/// Permanently empties the Recycle Bin. The UI shows its own confirmation first.
+#[tauri::command]
+pub async fn empty_recycle_bin(cleaner: State<'_, Arc<Cleaner>>) -> Result<(), CleanerError> {
+    blocking(&cleaner, |c| c.empty_recycle_bin()).await
+}
+
+/// Runs slow file-system work on Tauri's blocking pool instead of an async worker.
+async fn blocking<T: Send + 'static>(
+    cleaner: &Arc<Cleaner>,
+    f: impl FnOnce(&Cleaner) -> Result<T, CleanerError> + Send + 'static,
+) -> Result<T, CleanerError> {
+    let cleaner = Arc::clone(cleaner);
+    tauri::async_runtime::spawn_blocking(move || f(&cleaner))
+        .await
+        .map_err(|e| CleanerError::Internal(e.to_string()))?
 }
 
 #[cfg(test)]

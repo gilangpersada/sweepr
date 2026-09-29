@@ -10,6 +10,9 @@ mod windows;
 #[cfg(target_os = "windows")]
 use windows as os;
 
+#[cfg(not(target_os = "windows"))]
+mod unix;
+
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "macos")]
@@ -21,6 +24,8 @@ mod os {
     use std::io;
     use std::path::Path;
 
+    pub use super::unix::*;
+
     pub const CLEANER_RULES_JSON: &str = "{}";
 
     pub fn reveal_in_file_manager(_path: &Path) -> io::Result<()> {
@@ -28,8 +33,24 @@ mod os {
     }
 }
 
+pub use os::{
+    display_path, empty_recycle_bin, is_hidden, is_link, path_eq, protected_paths,
+    recycle_bin_info, recycle_bin_limit, ROOT_PROTECTED_NAMES,
+};
+
 /// The cleaner rules file for this OS (`config/cleaner-rules.<os>.json`).
 pub const CLEANER_RULES_JSON: &str = os::CLEANER_RULES_JSON;
+
+/// How much the Recycle Bin of a volume can take.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RecycleLimit {
+    /// Largest total the bin holds, in bytes. A bigger item would be deleted permanently.
+    MaxBytes(u64),
+    /// The user turned the bin off for this volume: deleting would be permanent.
+    Disabled,
+    /// Could not be determined (no bin on this volume, unreadable settings, other OS).
+    Unknown,
+}
 
 /// Shows `path` selected in the OS file manager. `path` must come from a scan tree, never
 /// straight from the UI. Fails with `NotFound` if it no longer exists.
@@ -68,5 +89,32 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let err = reveal_in_file_manager(&dir.path().join("gone.txt")).unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::NotFound);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn display_path_strips_verbatim_prefix() {
+        use std::path::PathBuf;
+        let canon = std::fs::canonicalize(std::env::temp_dir()).unwrap();
+        assert!(canon.to_string_lossy().starts_with(r"\\?\"));
+        let shown = display_path(&canon);
+        assert!(!shown.to_string_lossy().starts_with(r"\\?\"), "{shown:?}");
+        assert!(path_eq(&shown, &display_path(&shown)));
+        assert_eq!(
+            display_path(&PathBuf::from(r"\\?\C:\a\b")),
+            PathBuf::from(r"C:\a\b")
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn recycle_bin_limit_is_the_same_for_verbatim_paths() {
+        // The cleaner passes canonical (`\\?\C:\...`) paths; they must resolve to the same
+        // volume setting as the plain form, or every item would be refused as Unknown.
+        let verbatim = std::fs::canonicalize(std::env::temp_dir()).unwrap();
+        let plain = display_path(&verbatim);
+        let limit = recycle_bin_limit(&verbatim);
+        println!("{plain:?}: {limit:?}");
+        assert_eq!(limit, recycle_bin_limit(&plain));
     }
 }

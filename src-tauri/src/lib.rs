@@ -7,8 +7,12 @@ mod drives;
 mod platform;
 mod safety;
 pub mod scanner;
+#[cfg(test)]
+mod test_util;
 
 use std::sync::Arc;
+
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -27,6 +31,12 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(scanner::ScanSessions::new(options))
+        .setup(|app| {
+            // Log of every cleaner action (JSON lines), in the app's own log folder.
+            let log_path = app.path().app_log_dir()?.join("cleanup.jsonl");
+            app.manage(Arc::new(cleaner::Cleaner::for_app(log_path)));
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             commands::ping,
             commands::list_drives,
@@ -37,6 +47,11 @@ pub fn run() {
             commands::get_category_summary,
             commands::get_node_path,
             commands::reveal_in_explorer,
+            commands::list_cleaner_rules,
+            commands::preview_cleanup,
+            commands::execute_cleanup,
+            commands::get_recycle_bin_info,
+            commands::empty_recycle_bin,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
