@@ -2,6 +2,7 @@
 // `invoke` directly. Types mirror the Rust structs (serialized as camelCase).
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { open } from "@tauri-apps/plugin-dialog";
 
 export interface PingResponse {
   message: string;
@@ -128,4 +129,34 @@ export function onScanCancelled(cb: (e: ScanCancelledEvent) => void): Promise<Un
 
 export function onScanFailed(cb: (e: ScanFailedEvent) => void): Promise<UnlistenFn> {
   return listen<ScanFailedEvent>("scan-failed", (e) => cb(e.payload));
+}
+
+// ---------- scan result queries & actions ----------
+
+export interface CategorySize {
+  /** Key from `category_extensions` in the cleaner rules (e.g. "video"), or "other". */
+  key: string;
+  size: number;
+  fileCount: number;
+}
+
+/** File size per category below a node (recursive), largest first. */
+export function getCategorySummary(scanId: ScanId, nodeId: number): Promise<CategorySize[]> {
+  return invoke<CategorySize[]>("get_category_summary", { scanId, nodeId });
+}
+
+/** Full path of a node, for display and "copy path" only. */
+export function getNodePath(scanId: ScanId, nodeId: number): Promise<string> {
+  return invoke<string>("get_node_path", { scanId, nodeId });
+}
+
+/** Opens Explorer with the node selected. Sends the node id; the backend resolves the path. */
+export function revealInExplorer(scanId: ScanId, nodeId: number): Promise<void> {
+  return invoke("reveal_in_explorer", { scanId, nodeId });
+}
+
+/** Native "choose folder" dialog. Resolves to `null` when the user cancels. */
+export async function pickFolder(): Promise<string | null> {
+  const picked = await open({ directory: true, multiple: false });
+  return typeof picked === "string" ? picked : null;
 }

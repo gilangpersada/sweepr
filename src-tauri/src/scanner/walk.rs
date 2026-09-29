@@ -14,6 +14,7 @@ use std::time::{Duration, Instant, UNIX_EPOCH};
 use jwalk::rayon::prelude::*;
 use jwalk::WalkDirGeneric;
 
+use super::category::{Categories, CategoryId};
 use super::error::ScanError;
 use super::tree::{NodeId, ScanTree};
 
@@ -21,12 +22,15 @@ use super::tree::{NodeId, ScanTree};
 pub struct ScanOptions {
     /// Minimum time between two progress callbacks.
     pub progress_interval: Duration,
+    /// Extension -> category table; files get their category while scanning.
+    pub categories: Arc<Categories>,
 }
 
 impl Default for ScanOptions {
     fn default() -> Self {
         ScanOptions {
             progress_interval: Duration::from_millis(100),
+            categories: Arc::default(),
         }
     }
 }
@@ -50,6 +54,8 @@ pub struct Skipped {
 pub struct ScanResult {
     pub root_path: PathBuf,
     pub tree: ScanTree,
+    /// The table used to classify `tree`, needed to name its category ids.
+    pub categories: Arc<Categories>,
     pub skipped: Vec<Skipped>,
     pub elapsed: Duration,
 }
@@ -158,7 +164,19 @@ pub fn scan(
         }
 
         let is_dir = entry.file_type.is_dir();
-        let id = tree.push(parent, &entry.file_name, is_dir, meta.size, meta.modified);
+        let category = if is_dir {
+            CategoryId::OTHER
+        } else {
+            options.categories.classify(&entry.file_name)
+        };
+        let id = tree.push(
+            parent,
+            &entry.file_name,
+            is_dir,
+            meta.size,
+            meta.modified,
+            category,
+        );
         if is_dir {
             dirs += 1;
             stack.truncate(entry.depth);
@@ -194,19 +212,14 @@ pub fn scan(
     Ok(ScanOutcome::Completed(ScanResult {
         root_path: root.to_path_buf(),
         tree,
+        categories: Arc::clone(&options.categories),
         skipped,
         elapsed: started.elapsed(),
     }))
 }
 
 fn check_root(root: &Path) -> Result<fs::Metadata, ScanError> {
-    let meta = fs::symlink_metadata(root).map_err(|e| match e.kind() {
-        io::ErrorKind::NotFound => ScanError::NotFound(root.to_path_buf()),
-        _ => ScanError::Io {
-            path: root.to_path_buf(),
-            source: e,
-        },
-    })?;
+    let meta = fs::symlink_metadata(root).map_err(|e| ScanError::from_io(root.to_path_buf(), e))?;
     if meta.file_type().is_symlink() {
         return Err(ScanError::IsLink(root.to_path_buf()));
     }

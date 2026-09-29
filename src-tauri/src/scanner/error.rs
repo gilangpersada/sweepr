@@ -26,6 +26,14 @@ pub enum ScanError {
 }
 
 impl ScanError {
+    /// Maps an I/O error on `path`, keeping "not found" distinct for the UI.
+    pub fn from_io(path: PathBuf, source: std::io::Error) -> Self {
+        match source.kind() {
+            std::io::ErrorKind::NotFound => ScanError::NotFound(path),
+            _ => ScanError::Io { path, source },
+        }
+    }
+
     /// Stable, machine-readable code so the UI can pick its own (translated) message.
     pub fn code(&self) -> &'static str {
         match self {

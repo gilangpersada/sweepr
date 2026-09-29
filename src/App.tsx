@@ -1,13 +1,25 @@
-import { ScanDebug } from "./views/ScanDebug";
+import { useScan } from "./hooks/useScan";
+import { Home } from "./views/Home";
+import { ScanResult } from "./views/ScanResult";
 
 function App() {
+  const { state, start, cancel, reset } = useScan();
+
+  const scan = (path: string) => void start(path);
+
   return (
-    <main className="min-h-screen bg-white p-8 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
-      <h1 className="text-3xl font-semibold">Sweepr</h1>
-      <p className="mt-1 text-zinc-500 dark:text-zinc-400">
-        Analisis ruang disk dan pembersih yang aman.
-      </p>
-      <ScanDebug />
+    <main className="flex h-screen flex-col bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
+      {state.status === "finished" ? (
+        // Keyed by scan so a rescan starts at the root with fresh state.
+        <ScanResult
+          key={state.result.scanId}
+          result={state.result}
+          onHome={reset}
+          onRescan={scan}
+        />
+      ) : (
+        <Home scan={state} onScan={scan} onCancel={cancel} />
+      )}
     </main>
   );
 }

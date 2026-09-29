@@ -32,14 +32,21 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - Jika `tauri dev` gagal dengan path lama `...\disklens\...`: cache build sisa rename, jalankan `cargo clean --manifest-path src-tauri/Cargo.toml --profile dev`.
 
 ## M2 — UI hasil scan
-- [ ] Beranda: kartu drive + tombol pilih folder
-- [ ] Banner progress + tombol batal
-- [ ] Tabel folder (urut, persen, jumlah file, tanggal) + breadcrumb + masuk/naik folder
-- [ ] Ringkasan kategori (ekstensi dari config)
-- [ ] Tab "File Terbesar"
-- [ ] Aksi: buka di Explorer, salin path
-- [ ] Virtual list bila baris banyak
+- [x] Beranda: kartu drive + tombol pilih folder
+- [x] Banner progress + tombol batal
+- [x] Tabel folder (urut, persen, jumlah file, tanggal) + breadcrumb + masuk/naik folder
+- [x] Ringkasan kategori (ekstensi dari config)
+- [x] Tab "File Terbesar"
+- [x] Aksi: buka di Explorer, salin path
+- [x] Virtual list bila baris banyak
 **Selesai jika:** pengguna bisa scan drive lalu menelusuri sampai file terbesar tanpa hang.
+
+**Catatan M2 (2026-09-29)** — keputusan D-014 s/d D-017 (dialog plugin, `explorer.exe /select`, virtual list sendiri, kategori dari config).
+- Otomatis: `cargo test` (33 tes, termasuk ringkasan kategori, validasi config kategori, ukuran `Node` ≤ 72 byte), `clippy -D warnings`, `typecheck`, `lint`, `prettier --check`, `npm run build` — semua bersih.
+- Command baru: `get_category_summary`, `get_node_path`, `reveal_in_explorer` (menerima `node_id`, bukan path).
+- Tabel folder memakai virtual list untuk semua ukuran (bukan hanya > 500 baris): lebih sederhana, satu jalur kode.
+- Tab "File Terbesar" menampilkan 1000 file terbesar di seluruh hasil scan (bukan per folder).
+- **Cek manual `npm run tauri dev` belum dilakukan** — lihat daftar cek di ringkasan PR M2; isi hasilnya di sini.
 
 ## M3 — Pembersih aman
 - [ ] `safety.rs` lengkap dengan denylist + tes (lihat SAFETY_RULES)
