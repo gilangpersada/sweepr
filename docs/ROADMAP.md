@@ -12,6 +12,7 @@ Urutan ini usulan, bukan janji. Ubah sesuai apa yang benar-benar terpakai.
 | v0.3 | **File besar jarang dibuka** | Filter: > X GB dan tidak diakses > N hari. Cocok untuk video mentah lama. |
 | v0.4 | **Riwayat scan** | Simpan snapshot ringkas (SQLite); tampilkan folder yang tumbuh cepat. |
 | v0.4 | **Cache browser & app** | Rule tambahan dengan peringatan (login/sesi bisa hilang). |
+| v0.4 | **Cache Developer tambahan** | Rule grup developer lain: `target/` (Rust), `.next/`, `dist/`/`build/` lama, cache Gradle/pip. Plus dukungan `node_modules` pnpm (saat ini dikecualikan karena berisi junction, D-022) — perlu verifikasi perilaku Recycle Bin terhadap junction dulu. |
 | v0.5 | **Widget tray + peringatan drive hampir penuh** | Ikon tray, sisa ruang tiap drive, notifikasi ambang batas. |
 | v0.5 | **Mode pembersih: aman / sedang / agresif** | Preset yang mengatur rule mana dicentang. |
 | v0.6 | **Port ke macOS** | Full Disk Access, `cleaner-rules.macos.json`, `~/Library/Caches`, Xcode DerivedData, Trash. |

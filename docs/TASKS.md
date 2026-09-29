@@ -67,6 +67,7 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - Temuan saat tes: pada path verbatim (bentuk `\\?\C:\...` hasil `canonicalize`), `PathBuf::join("..")` langsung membuang komponen sebelumnya, jadi `..` tidak pernah terlihat; pemeriksaan kini juga menolak komponen bernama `..`/`.` sebagai pertahanan tambahan. Daftar Recycle Bin menyembunyikan ekstensi hanya untuk tipe file terdaftar (`.txt` ya, `.tmp` tidak).
 - Preview nyata di PC pemilik (hanya baca): temp 422 item / 247 MB (53 ms), installer lama 28 item / 7,5 GB (2 ms), `node_modules` lama 0 item — project ada di Desktop yang terlindungi (lihat pertanyaan terbuka di DECISIONS).
 - Recycle Bin `C:` di PC pemilik: MaxCapacity ±48,6 GB, NukeOnDelete 0.
+- **Lanjutan M3 — grup "Cache Developer" (D-025):** rule punya field `group`; `node_modules project lama` kini juga mencari di Desktop dan Documents (disebut eksplisit), root bersarang tidak ditelusuri dua kali. `cargo test` 72 lulus. Preview nyata: penelusuran user folder + Desktop + Documents 468 ms; 0 item karena 2 project lama memakai pnpm dengan ±1.000 junction ke lokasi lama (dikecualikan, D-022); `node_modules` extension VS Code (`.vscode`) tidak disentuh.
 - **Cek manual `npm run tauri dev` di folder dummy belum dilakukan** — lihat daftar cek di ringkasan PR M3; isi hasilnya di sini.
 
 ## M4 — Poles & rilis pribadi

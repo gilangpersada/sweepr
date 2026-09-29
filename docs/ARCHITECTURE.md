@@ -46,7 +46,7 @@ struct Node {
 | `get_node_path` | `scan_id`, `node_id` | `String` (hanya untuk tampilan/salin, tidak pernah diterima balik) |
 | `get_largest_files` | `scan_id`, `limit` (maks 5000) | `Vec<FileView>` (`NodeView` + `path`) |
 | `reveal_in_explorer` | `scan_id`, `node_id` | — (path dihitung dari tree, D-015) |
-| `list_cleaner_rules` | — | `Vec<RuleInfo>` (`id, name, description, risk, default_checked`) |
+| `list_cleaner_rules` | — | `Vec<RuleInfo>` (`id, name, group, description, risk, default_checked`) |
 | `preview_cleanup` | `rule_ids` | `CleanupPreview { preview_id, max_items, rules: Vec<RulePreview> }`; tiap item punya `item_id` |
 | `execute_cleanup` | `preview_id`, `item_ids` | `CleanupResult { trashed_count, trashed_bytes, failed_count, items }`; item gagal membawa `error { code, message }` |
 | `get_recycle_bin_info` | — | `RecycleBinInfo { size_bytes, item_count }` |
@@ -80,8 +80,8 @@ Error command dikirim sebagai `{ code, message }` (`code` stabil untuk terjemaha
 - `may_descend`: walker tidak pernah masuk ke folder terlindungi.
 
 ## Cleaner (`cleaner/`)
-1. `rules.rs`: memuat `config/cleaner-rules.<os>.json` yang disematkan (D-020) dengan validasi ketat — field asing ditolak, `action` hanya `trash`, `risk` hanya `low`/`medium` (medium tidak boleh dicentang default), `min_age_days ≥ 1`, id unik. `%VAR%` diekspansi (known folder via `dirs`, lalu env); variabel tak dikenal = error untuk root itu.
-2. `matcher.rs`: `files_in_root` (umur + ekstensi opsional, rekursif opsional) dan `named_directory` (`node_modules` + `package.json`, D-021). Walker tidak pernah mengikuti link dan tidak masuk folder terlindungi. Folder kandidat berisi link dikecualikan (D-022).
+1. `rules.rs`: memuat `config/cleaner-rules.<os>.json` yang disematkan (D-020) dengan validasi ketat — field asing ditolak, `group` wajib (`general`/`developer`, D-025), `action` hanya `trash`, `risk` hanya `low`/`medium` (medium tidak boleh dicentang default), `min_age_days ≥ 1`, id unik. `%VAR%` diekspansi (known folder via `dirs`, lalu env); variabel tak dikenal = error untuk root itu.
+2. `matcher.rs`: `files_in_root` (umur + ekstensi opsional, rekursif opsional) dan `named_directory` (`node_modules` + `package.json`, D-021). Walker tidak pernah mengikuti link dan tidak masuk folder terlindungi. Folder kandidat berisi link dikecualikan (D-022). Root yang berada di dalam root lain tidak dimasuki dari root luar (ditelusuri sendiri), dan kandidat dibuang duplikatnya.
 3. `preview(rule_ids)`: kandidat → `safety::validate` (yang gagal tidak pernah ditampilkan, hanya dihitung `excludedCount`) → urut terbesar → maks 10.000 per rule → disimpan di memori dengan `preview_id` (hanya satu preview aktif; preview baru menggantikan yang lama).
 4. `execute(preview_id, item_ids)`: preview **dikonsumsi** (tidak bisa dipakai dua kali), ditolak jika > 30 menit atau > 10.000 item. Log dibuka dulu; kalau gagal, tidak ada aksi. Per item: `validate` ulang → `recheck` (fingerprint ukuran/waktu ubah harus sama, rule masih cocok) → cek Recycle Bin drive (D-019) → `trash::delete_all` per batch 100 (batch gagal diulang per item) → pastikan path sudah hilang. Setiap hasil langsung ditulis ke log.
 5. Log JSON lines: `<app_log_dir>/cleanup.jsonl` (Windows: `%LOCALAPPDATA%\com.sweepr.app\logs`). Field: `ts` (unix ms), `action` (`trash`/`emptyRecycleBin`), `previewId`, `ruleId`, `path`, `size`, `ok`, `reason`.

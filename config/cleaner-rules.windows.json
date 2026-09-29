@@ -6,6 +6,7 @@
     {
       "id": "user-temp",
       "name": "File sementara pengguna",
+      "group": "general",
       "description": "File di folder Temp pengguna yang sudah lama tidak diubah.",
       "risk": "low",
       "default_checked": true,
@@ -20,6 +21,7 @@
     {
       "id": "old-installers",
       "name": "Installer lama di Downloads",
+      "group": "general",
       "description": "File installer/arsip besar di Downloads yang tidak disentuh lebih dari 30 hari.",
       "risk": "low",
       "default_checked": true,
@@ -34,11 +36,12 @@
     },
     {
       "id": "stale-node-modules",
-      "name": "node_modules lama",
-      "description": "Folder node_modules di project yang tidak diubah lebih dari 60 hari. Bisa dibuat ulang dengan npm install.",
+      "name": "node_modules project lama",
+      "group": "developer",
+      "description": "Folder node_modules di project JavaScript/TypeScript yang tidak diubah lebih dari 60 hari (dicari di folder pengguna, Desktop, dan Documents). Bisa dibuat ulang dengan npm install.",
       "risk": "medium",
       "default_checked": false,
-      "allowed_roots": ["%USERPROFILE%"],
+      "allowed_roots": ["%USERPROFILE%", "%DESKTOP%", "%DOCUMENTS%"],
       "match": {
         "type": "named_directory",
         "directory_name": "node_modules",

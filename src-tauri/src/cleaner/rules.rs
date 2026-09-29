@@ -18,6 +18,16 @@ pub enum Risk {
     // No `High`: not allowed in the MVP, so such a rule fails to parse.
 }
 
+/// Section of the cleaner screen a rule is shown in. Required, so every new rule picks one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Group {
+    /// Useful to everyone (temp files, old installers).
+    General,
+    /// Only relevant to developers (`node_modules`, build caches). Shown as "Cache Developer".
+    Developer,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Action {
@@ -58,6 +68,7 @@ impl Match {
 pub struct Rule {
     pub id: String,
     pub name: String,
+    pub group: Group,
     pub description: String,
     pub risk: Risk,
     pub default_checked: bool,
@@ -215,7 +226,7 @@ mod tests {
     }
 
     const GOOD: &str = r#"{
-        "id": "user-temp", "name": "Temp", "description": "d", "risk": "low",
+        "id": "user-temp", "name": "Temp", "group": "general", "description": "d", "risk": "low",
         "default_checked": true, "allowed_roots": ["%TEMP%"],
         "match": { "type": "files_in_root", "recursive": true, "min_age_days": 3 },
         "action": "trash"
@@ -232,7 +243,22 @@ mod tests {
             let ids: Vec<_> = rules.iter().map(|r| r.id.as_str()).collect();
             assert_eq!(ids, ["user-temp", "old-installers", "stale-node-modules"]);
             assert!(rules.iter().all(|r| r.action == Action::Trash));
+            let groups: Vec<_> = rules.iter().map(|r| r.group).collect();
+            assert_eq!(groups, [Group::General, Group::General, Group::Developer]);
+            // Desktop/Documents are protected unless a rule names them: this one does.
+            assert_eq!(
+                rules[2].allowed_roots,
+                ["%USERPROFILE%", "%DESKTOP%", "%DOCUMENTS%"]
+            );
         }
+    }
+
+    #[test]
+    fn group_is_required_and_checked() {
+        let without = GOOD.replace(r#""group": "general", "#, "");
+        assert!(err(&file_with(&without)).contains("missing field `group`"));
+        let unknown = GOOD.replace(r#""group": "general""#, r#""group": "gamer""#);
+        assert!(load_rules(&file_with(&unknown), "windows").is_err());
     }
 
     #[test]
@@ -297,7 +323,7 @@ mod tests {
         );
         assert!(err(&file_with(&bad_ext)).contains("extensions"));
         let bad_dir = r#"{
-            "id": "nm", "name": "n", "description": "d", "risk": "medium",
+            "id": "nm", "name": "n", "group": "developer", "description": "d", "risk": "medium",
             "default_checked": false, "allowed_roots": ["%USERPROFILE%"],
             "match": { "type": "named_directory", "directory_name": "../x",
                        "project_marker_file": "package.json", "min_age_days": 60 },

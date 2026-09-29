@@ -11,6 +11,7 @@ import {
   type CleanupPreview,
   type CleanupResult,
   type RecycleBinInfo,
+  type RuleGroup,
   type RulePreview,
 } from "../lib/api";
 import { errorCode, errorMessage } from "../lib/errors";
@@ -28,6 +29,16 @@ function defaultSelection(p: CleanupPreview): Set<number> {
     p.rules.filter((r) => r.defaultChecked).flatMap((r) => r.items.map((i) => i.itemId)),
   );
 }
+
+/** Sections of the screen, in display order. */
+const GROUPS: { id: RuleGroup; title: string; hint?: string }[] = [
+  { id: "general", title: "Umum" },
+  {
+    id: "developer",
+    title: "Cache Developer",
+    hint: "Untuk developer: folder yang bisa dibuat ulang dari project (mis. npm install). Tidak dicentang otomatis; project yang masih aktif tidak ikut.",
+  },
+];
 
 /** Previews every rule; the UI decides what is checked. */
 async function loadPreview(): Promise<View> {
@@ -164,15 +175,34 @@ export function Cleaner({ onBack }: Props) {
         )}
         {view.kind === "done" && <CleanupResultView result={view.result} onDone={reload} />}
         {preview &&
-          preview.rules.map((rule) => (
-            <RuleCard
-              key={rule.id}
-              rule={rule}
-              selected={selected}
-              onToggleRule={toggleRule}
-              onToggleItem={toggleItem}
-            />
-          ))}
+          GROUPS.map((group) => {
+            const rules = preview.rules.filter((r) => r.group === group.id);
+            if (rules.length === 0) return null;
+            return (
+              <section key={group.id} aria-labelledby={`group-${group.id}`} className="space-y-3">
+                <div>
+                  <h2
+                    id={`group-${group.id}`}
+                    className="text-sm font-semibold uppercase tracking-wide text-zinc-500"
+                  >
+                    {group.title}
+                  </h2>
+                  {group.hint && (
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{group.hint}</p>
+                  )}
+                </div>
+                {rules.map((rule) => (
+                  <RuleCard
+                    key={rule.id}
+                    rule={rule}
+                    selected={selected}
+                    onToggleRule={toggleRule}
+                    onToggleItem={toggleItem}
+                  />
+                ))}
+              </section>
+            );
+          })}
       </div>
 
       {preview && (
