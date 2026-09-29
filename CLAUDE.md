@@ -60,6 +60,7 @@ npm run lint && npm run typecheck
 - Work **one milestone at a time** from `docs/TASKS.md`. Do not start the next milestone unprompted.
 - Before big changes, state a short plan (3–6 bullets), then implement.
 - Keep commands thin; put logic in modules that are unit-testable without Tauri.
+- All UI text goes through `src/lib/i18n` (`id.ts` + `en.ts`, D-026); never hardcode strings in components. Format numbers/sizes/dates with `useI18n().fmt`.
 - Scanning must run off the UI thread, report progress via events, and be cancellable.
 - Never send the whole file tree to the frontend at once. Send children lazily per node (see ARCHITECTURE).
 - Write tests for: size aggregation, cancellation, path validation/protected paths, rule matching.

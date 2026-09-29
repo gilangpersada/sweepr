@@ -76,14 +76,22 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
   - Hanya rule node_modules yang diuji lewat UI; file temp/installer dummy tidak dipindah (jalur yang sama sudah dicakup tes otomatis `real_cleanup_round_trip_in_dummy_folder`).
 
 ## M4 — Poles & rilis pribadi
-- [ ] Tema terang/gelap ikut sistem
-- [ ] Teks UI dipusatkan (i18n sederhana, Bahasa Indonesia)
-- [ ] Pesan error yang ramah, state kosong, state loading
-- [ ] Ikon & nama final app
-- [ ] `npm run tauri build` menghasilkan installer Windows
+- [x] Tema terang/gelap ikut sistem
+- [x] Teks UI dipusatkan (i18n sederhana) — Bahasa Indonesia + Inggris (D-026)
+- [x] Pesan error yang ramah, state kosong, state loading
+- [x] Ikon & nama final app
+- [x] `npm run tauri build` menghasilkan installer Windows — `Sweepr_0.1.0_x64-setup.exe` 1,59 MB (NSIS, per pengguna)
 - [ ] Catatan hasil pemakaian 2 minggu → masukkan ke `DECISIONS.md`
 **Selesai jika:** semua checklist "Definition of Done — MVP" di `PRD.md` tercentang.
 
-**Masukan dari uji manual M3** (pertimbangkan saat mulai M4):
-- Daftar detail rule diurutkan dari yang terbesar; file kecil tertentu sulit ditemukan di antara ratusan item. Usulan: kolom cari/filter di daftar detail.
-- Rule node_modules menampilkan tanggal folder `node_modules`, padahal yang dinilai adalah tanggal `package.json` dan folder project. Usulan: tampilkan "project terakhir diubah".
+**Masukan dari uji manual M3** (dikerjakan di M4):
+- [x] Daftar detail rule diurutkan dari yang terbesar; file kecil tertentu sulit ditemukan di antara ratusan item. Usulan: kolom cari/filter di daftar detail.
+- [x] Rule node_modules menampilkan tanggal folder `node_modules`, padahal yang dinilai adalah tanggal `package.json` dan folder project. Usulan: tampilkan "project terakhir diubah".
+
+**Catatan M4 (2026-09-29)** — keputusan D-026 s/d D-029.
+- Tambahan di luar checklist: FR-2 lengkap (daftar item yang tidak bisa dibaca, command `get_skipped` + dialog "Lihat daftar"); kolom cari di daftar detail Pembersih; tanggal "project terakhir diubah" untuk rule node_modules.
+- i18n: kamus `id.ts`/`en.ts` bertipe; bahasa awal ikut Windows, pilihan di Beranda. Tidak ada teks UI yang tertanam di komponen (dicek dengan grep).
+- Ikon: rubah menyapu dari pemilik, glow dibuang (`source-clean.png`), dibuat dengan `npm run tauri icon`.
+- Otomatis: `cargo test` 72 lulus, clippy, typecheck, lint, prettier bersih.
+- Build: `npm run tauri build` sukses; satu peringatan: identifier `com.sweepr.app` berakhiran `.app` (bentrok dengan bundle macOS, tidak berpengaruh di Windows — keputusan pemilik, D-010); installer 1,59 MB (target PRD < 30 MB), `sweepr.exe` 4,8 MB.
+- **Belum:** uji install/uninstall dan tampilan app hasil build di PC pemilik; catatan pemakaian 2 minggu (template di `DECISIONS.md`).

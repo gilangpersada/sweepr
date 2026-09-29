@@ -3,8 +3,9 @@ import { Breadcrumb, type Crumb } from "../components/Breadcrumb";
 import { CategoryBar } from "../components/CategoryBar";
 import { FolderTable, type Sort } from "../components/FolderTable";
 import { LargestFiles } from "../components/LargestFiles";
+import { SkippedDialog } from "../components/SkippedDialog";
 import type { NodeView, ScanFinishedEvent } from "../lib/api";
-import { formatBytes, formatCount } from "../lib/format";
+import { countOf, useI18n } from "../lib/i18n";
 
 interface Props {
   result: ScanFinishedEvent;
@@ -18,12 +19,17 @@ interface Props {
 type Tab = "folders" | "largest";
 
 const TOAST_MS = 2500;
+const HEADER_BUTTON =
+  "rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800";
 
 export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: Props) {
+  const i18n = useI18n();
+  const { t, fmt } = i18n;
   const { scanId, rootId, rootPath } = result;
   const [tab, setTab] = useState<Tab>("folders");
   const [trail, setTrail] = useState<Crumb[]>([{ id: rootId, name: rootPath }]);
   const [sort, setSort] = useState<Sort>({ sortBy: "size", order: "desc" });
+  const [showSkipped, setShowSkipped] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
 
@@ -42,7 +48,7 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
 
   // Backspace goes up one folder, like Explorer.
   useEffect(() => {
-    if (tab !== "folders" || !active) return;
+    if (tab !== "folders" || !active || showSkipped) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (e.key !== "Backspace" || target?.closest("input, textarea")) return;
@@ -51,11 +57,11 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [tab, active]);
+  }, [tab, active, showSkipped]);
 
-  const tabClass = (t: Tab) =>
+  const tabClass = (which: Tab) =>
     `border-b-2 px-3 py-2 text-sm font-medium ${
-      tab === t
+      tab === which
         ? "border-blue-600 text-blue-600 dark:text-blue-400"
         : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
     }`;
@@ -68,36 +74,37 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
           onClick={onHome}
           className="text-sm text-blue-600 hover:underline dark:text-blue-400"
         >
-          ← Beranda
+          {t.result.home}
         </button>
         <div className="min-w-0 flex-1">
           <div className="truncate font-semibold" title={rootPath}>
             {rootPath}
           </div>
           <div className="text-xs tabular-nums text-zinc-500">
-            {formatBytes(result.totalBytes)} · {formatCount(result.totalFiles)} file · selesai dalam{" "}
-            {(result.elapsedMs / 1000).toLocaleString("id-ID", { maximumFractionDigits: 1 })} detik
+            {fmt.bytes(result.totalBytes)} · {countOf(i18n, result.totalFiles, t.units.files)} ·{" "}
+            {t.result.finishedIn(fmt.seconds(result.elapsedMs))}
             {result.skippedCount > 0 && (
-              <span title="Biasanya folder sistem yang aksesnya ditolak. Ukurannya tidak dihitung.">
-                {" "}
-                · {formatCount(result.skippedCount)} item tidak bisa dibaca
-              </span>
+              <>
+                {" · "}
+                <span title={t.result.unreadableHint}>
+                  {t.result.unreadable(countOf(i18n, result.skippedCount, t.units.items))}
+                </span>{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowSkipped(true)}
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {t.result.showList}
+                </button>
+              </>
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => onRescan(rootPath)}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        >
-          Scan ulang
+        <button type="button" onClick={() => onRescan(rootPath)} className={HEADER_BUTTON}>
+          {t.result.rescan}
         </button>
-        <button
-          type="button"
-          onClick={onOpenCleaner}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        >
-          Pembersih
+        <button type="button" onClick={onOpenCleaner} className={HEADER_BUTTON}>
+          {t.result.cleaner}
         </button>
       </header>
 
@@ -109,7 +116,7 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
           onClick={() => setTab("folders")}
           className={tabClass("folders")}
         >
-          Folder
+          {t.result.tabFolders}
         </button>
         <button
           type="button"
@@ -118,7 +125,7 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
           onClick={() => setTab("largest")}
           className={tabClass("largest")}
         >
-          File Terbesar
+          {t.result.tabLargest}
         </button>
       </div>
 
@@ -144,6 +151,8 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
           </div>
         </div>
       )}
+
+      {showSkipped && <SkippedDialog scanId={scanId} onClose={() => setShowSkipped(false)} />}
 
       {toast && (
         <div

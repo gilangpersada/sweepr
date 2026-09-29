@@ -4,7 +4,7 @@ Aplikasi desktop untuk memindai penyimpanan PC, menunjukkan folder/file apa yang
 
 - **Platform MVP:** Windows 10/11 (struktur disiapkan untuk macOS)
 - **Stack:** Tauri 2 (Rust) + React + TypeScript + Vite
-- **Status:** Pra-MVP — M0 (setup), M1 (scanner), M2 (UI hasil scan), M3 (pembersih aman) selesai; berikutnya M4 (poles & rilis pribadi)
+- **Status:** Pra-MVP — M0–M3 selesai; M4 (poles & rilis pribadi) dikerjakan: installer jadi, menunggu 2 minggu pemakaian
 - **Prasyarat:** Node ≥ 22.12, Rust stable (MSVC), Visual Studio Build Tools (C++)
 
 ## Isi folder ini
@@ -22,9 +22,25 @@ Aplikasi desktop untuk memindai penyimpanan PC, menunjukkan folder/file apa yang
 | `config/cleaner-rules.windows.json` | Aturan pembersih Windows (data, bukan kode) |
 | `config/cleaner-rules.macos.json` | Stub untuk macOS (belum dipakai di MVP) |
 
-## Cara mulai
+## Menjalankan saat pengembangan
 
-1. Ekstrak zip, jalankan `git init` di foldernya.
-2. Buka folder di Claude Code.
-3. Buka `docs/START_PROMPT.md`, salin prompt-nya, dan mulai dari **Milestone M0**.
-4. Kerjakan satu milestone per sesi. Jangan lompat.
+```
+npm install
+npm run tauri dev
+```
+
+Cek sebelum commit: `npm run lint && npm run typecheck`, `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings`, `cargo test --manifest-path src-tauri/Cargo.toml`.
+
+## Membuat & memasang installer (Windows)
+
+1. `npm run tauri build` — build pertama mengunduh tool NSIS dari GitHub (hanya saat build).
+2. Hasil: `src-tauri/target/release/bundle/nsis/Sweepr_<versi>_x64-setup.exe`.
+3. Jalankan installer. Terpasang per pengguna, **tanpa hak admin** (D-027).
+4. Installer belum ditandatangani, jadi Windows SmartScreen menampilkan "Windows protected your PC": klik **More info → Run anyway**.
+5. Uninstall lewat **Settings → Apps → Installed apps → Sweepr**.
+
+Log pembersihan: `%LOCALAPPDATA%\com.sweepr.app\logs\cleanup.jsonl`.
+
+## Bekerja dengan Claude Code
+
+Kerjakan satu milestone per sesi dari `docs/TASKS.md`. Prompt awal proyek ada di `docs/START_PROMPT.md`.

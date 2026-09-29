@@ -180,6 +180,10 @@ fn preview_lists_only_old_unprotected_items_largest_first() {
     );
     assert!(nm.items[0].is_dir);
     assert_eq!(nm.items[0].size, 300);
+    // The date shown is the project's (aged 90 days), not the node_modules folder's (fresh).
+    let project_age_days = (now_secs() - nm.items[0].project_modified.unwrap()) / 86_400;
+    assert!((89..=91).contains(&project_age_days), "{project_age_days}");
+    assert!(temp.items.iter().all(|i| i.project_modified.is_none()));
     // The missing root is reported, not fatal.
     assert_eq!(nm.root_problems.len(), 1);
 

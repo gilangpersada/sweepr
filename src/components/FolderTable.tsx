@@ -2,9 +2,10 @@ import { useCallback } from "react";
 import { useChildren } from "../hooks/useChildren";
 import type { NodeView, ScanId, SortBy, SortOrder } from "../lib/api";
 import { errorMessage } from "../lib/errors";
-import { formatBytes, formatCount, formatDate, formatPercent } from "../lib/format";
+import { useI18n } from "../lib/i18n";
 import { FileIcon, FolderIcon } from "./icons";
 import { RowActions } from "./RowActions";
+import { EmptyState, ErrorState, LoadingState } from "./states";
 import { VirtualList } from "./VirtualList";
 
 export interface Sort {
@@ -27,23 +28,26 @@ const ROW_HEIGHT = 36;
 const GRID =
   "grid grid-cols-[minmax(0,1fr)_6.5rem_10rem_6rem_7.5rem_4.5rem] items-center gap-3 px-3";
 
-const COLUMNS: { label: string; sortBy?: SortBy; align?: string }[] = [
-  { label: "Nama", sortBy: "name" },
-  { label: "Ukuran", sortBy: "size", align: "text-right" },
-  { label: "% dari folder", sortBy: "size" },
-  { label: "File", sortBy: "fileCount", align: "text-right" },
-  { label: "Diubah", sortBy: "modified" },
-  { label: "", align: "sr-only" },
+type ColumnId = "name" | "size" | "percent" | "files" | "modified" | "actions";
+
+const COLUMNS: { id: ColumnId; sortBy?: SortBy; align?: string }[] = [
+  { id: "name", sortBy: "name" },
+  { id: "size", sortBy: "size", align: "text-right" },
+  { id: "percent", sortBy: "size" },
+  { id: "files", sortBy: "fileCount", align: "text-right" },
+  { id: "modified", sortBy: "modified" },
+  { id: "actions", align: "text-right" },
 ];
 
 export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify }: Props) {
+  const { t, fmt } = useI18n();
   const { total, rows, error, ensureRange } = useChildren(scanId, nodeId, sort.sortBy, sort.order);
 
   const renderRow = useCallback(
     (i: number) => {
       const node = rows[i];
       if (!node) {
-        return <div className={`${GRID} h-full text-sm text-zinc-400`}>Memuat…</div>;
+        return <div className={`${GRID} h-full text-sm text-zinc-400`}>{t.table.loadingRow}</div>;
       }
       const canOpen = node.isDir && node.hasChildren;
       return (
@@ -73,7 +77,7 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
             )}
           </div>
           <div role="cell" className="text-right tabular-nums">
-            {formatBytes(node.size)}
+            {fmt.bytes(node.size)}
           </div>
           <div role="cell" className="flex items-center gap-2">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
@@ -83,14 +87,14 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
               />
             </div>
             <span className="w-12 text-right text-xs tabular-nums text-zinc-500">
-              {formatPercent(node.percentOfParent)}
+              {fmt.percent(node.percentOfParent)}
             </span>
           </div>
           <div role="cell" className="text-right tabular-nums text-zinc-600 dark:text-zinc-400">
-            {node.isDir ? formatCount(node.fileCount) : ""}
+            {node.isDir ? fmt.count(node.fileCount) : ""}
           </div>
           <div role="cell" className="text-zinc-600 dark:text-zinc-400">
-            {formatDate(node.modified)}
+            {fmt.date(node.modified)}
           </div>
           <div role="cell">
             <RowActions scanId={scanId} nodeId={node.id} notify={notify} />
@@ -98,7 +102,7 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
         </div>
       );
     },
-    [rows, scanId, onOpen, notify],
+    [rows, scanId, onOpen, notify, t, fmt],
   );
 
   function clickHeader(sortBy: SortBy) {
@@ -116,11 +120,13 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
       className={`${GRID} h-9 border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800`}
     >
       {COLUMNS.map((col) => {
-        const active = col.sortBy === sort.sortBy && col.label !== "% dari folder";
+        const label = t.table[col.id];
+        // "Size" and "% of folder" sort the same way; show the arrow on "Size" only.
+        const active = col.sortBy === sort.sortBy && col.id !== "percent";
         const colSort = col.sortBy;
         return (
           <div
-            key={col.label || "actions"}
+            key={col.id}
             role="columnheader"
             aria-sort={active ? (sort.order === "asc" ? "ascending" : "descending") : undefined}
             className={col.align}
@@ -131,11 +137,11 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
                 onClick={() => clickHeader(colSort)}
                 className="hover:text-zinc-900 dark:hover:text-zinc-100"
               >
-                {col.label}
+                {label}
                 {active && (sort.order === "asc" ? " ▲" : " ▼")}
               </button>
             ) : (
-              "Aksi"
+              label
             )}
           </div>
         );
@@ -143,14 +149,20 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
     </div>
   );
 
-  if (error) {
-    return <p className="p-4 text-sm text-red-600 dark:text-red-400">{errorMessage(error)}</p>;
+  if (error) return <ErrorState message={errorMessage(t, error)} />;
+  if (total === null) {
+    return (
+      <div className="flex flex-1 flex-col">
+        {header}
+        <LoadingState />
+      </div>
+    );
   }
   if (total === 0) {
     return (
       <div className="flex flex-1 flex-col">
         {header}
-        <p className="p-4 text-sm text-zinc-500">Folder ini kosong.</p>
+        <EmptyState text={t.table.emptyFolder} />
       </div>
     );
   }
@@ -158,7 +170,7 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
     <VirtualList
       key={`${nodeId}/${sort.sortBy}/${sort.order}`}
       className="min-h-0 flex-1"
-      count={total ?? 0}
+      count={total}
       rowHeight={ROW_HEIGHT}
       header={header}
       renderRow={renderRow}

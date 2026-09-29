@@ -28,13 +28,26 @@
 | D-023 | Pembersih = layar tersendiri (tombol di Beranda dan di header hasil scan), bukan tab hasil scan | Rule tidak butuh hasil scan | Diterima (M3) |
 | D-024 | Root rule boleh memakai `%DOWNLOADS%`, `%DOCUMENTS%`, `%DESKTOP%`, `%HOME%` (folder asli via `dirs`) selain variabel lingkungan; rule "installer lama" memakai `%DOWNLOADS%` | Downloads yang dipindah ke drive lain tetap benar | Diterima (M3) |
 | D-025 | Rule punya field wajib `group` (`general` / `developer`); layar Pembersih dibagi "Umum" dan "Cache Developer". Rule `node_modules project lama` masuk grup developer dengan root `%USERPROFILE%`, `%DESKTOP%`, `%DOCUMENTS%` | Project developer sering di Desktop/Documents; menyebut folder itu secara eksplisit memenuhi SAFETY_RULES (folder Desktop/Documents sendiri tetap tidak pernah bisa dihapus). Root yang bersarang di root lain ditelusuri sekali, kandidat tidak pernah ganda | Diterima (M3, lanjutan) |
+| D-026 | UI dua bahasa (Indonesia + Inggris) sejak M4, tanpa library: kamus bertipe `src/lib/i18n/id.ts` (acuan bentuk) dan `en.ts` (typecheck gagal bila kunci kurang), `useI18n()` memberi `t` + formatter angka/ukuran/tanggal sesuai bahasa. Bahasa awal ikut bahasa Windows (Indonesia → `id`, lainnya → `en`), bisa diganti di Beranda dan diingat (`localStorage`). Nama/deskripsi rule diterjemahkan di kamus per `id` rule; config tetap satu bahasa | Diminta pemilik di awal M4 (menggantikan "Inggris menyusul"); tanpa dependency |
+| D-027 | Installer: NSIS saja, `installMode: currentUser` (tanpa hak admin); belum ditandatangani (SmartScreen akan memperingatkan) | Sesuai PRD "tidak butuh hak admin"; satu file setup; code signing di luar MVP |
+| D-028 | Ikon app: rubah menyapu (gaya flat, latar transparan) dari pemilik. Sumber `src-tauri/icons/source.png`; `source-clean.png` = versi tanpa glow (piksel alpha < 200 dibuang) yang dipakai `npm run tauri icon` | Glow semi-transparan membuat ikon buram di taskbar gelap. Folder ikon android/ios tidak disimpan |
+| D-029 | Tema: selain kelas `dark:` Tailwind, `color-scheme: light dark` di `:root` supaya scrollbar, checkbox, `<select>`, `<dialog>` ikut tema Windows; latar `html/body` diset agar tidak berkedip putih | Melengkapi D-007 |
 
 ## Pertanyaan terbuka
 - **Ketersediaan nama "Sweepr"** (D-010): cek merek dagang, domain, crates.io/npm sebelum rilis publik.
 - **Ukuran yang ditampilkan:** M1 memakai logical size (`len`). Size on disk (cluster slack, kompresi, file cloud OneDrive) dan hardlink yang terhitung ganda belum ditangani — putuskan apakah perlu sebelum rilis.
 - **Perlu izin admin opsional** untuk scan folder yang terkunci? (MVP: lewati saja.)
 - **Lisensi jika open source** (MIT / Apache-2.0 / GPL)?
-- **Bahasa UI:** Indonesia saja di MVP, Inggris menyusul?
 
 ## Pertanyaan terbuka untuk M2
 Sudah diputuskan di awal M2: lihat D-014 s/d D-017.
+
+## Catatan pemakaian 2 minggu (M4)
+Isi setelah memakai build installer di PC sendiri selama ±2 minggu (mulai: ____, selesai: ____). Tulis singkat; jadi dasar memilih v0.2 (lihat ROADMAP).
+- **Paling sering dipakai:** (scan drive? file terbesar? pembersih? rule mana?)
+- **Yang mengganggu / membingungkan:**
+- **Yang kurang:**
+- **Insiden data** (file yang tidak seharusnya terhapus, walau bisa dipulihkan): _harus "tidak ada" untuk Definition of Done MVP_
+- **Kinerja** (waktu scan, memori, UI tersendat?):
+- **Bahasa** (Indonesia/Inggris, teks yang janggal):
+- **Keputusan yang perlu ditinjau ulang** (mis. D-022 pnpm, D-020 config disematkan):

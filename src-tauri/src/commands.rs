@@ -13,7 +13,7 @@ use crate::drives::{self, DriveInfo};
 use crate::platform;
 use crate::scanner::{
     CategorySize, ChildrenPage, FileView, NodeId, ScanError, ScanEvent, ScanId, ScanSessions,
-    SortBy, SortOrder,
+    SkippedPage, SortBy, SortOrder,
 };
 
 /// Upper bound for page sizes requested by the UI, so one call never ships a huge payload.
@@ -88,6 +88,18 @@ pub fn get_largest_files(
 ) -> Result<Vec<FileView>, ScanError> {
     let result = sessions.result(scan_id)?;
     Ok(result.tree.largest_files(limit.min(MAX_PAGE)))
+}
+
+/// Entries the scan could not read (FR-2), a page at a time.
+#[tauri::command]
+pub fn get_skipped(
+    sessions: State<'_, ScanSessions>,
+    scan_id: ScanId,
+    offset: usize,
+    limit: usize,
+) -> Result<SkippedPage, ScanError> {
+    let result = sessions.result(scan_id)?;
+    Ok(result.skipped_page(offset, limit.min(MAX_PAGE)))
 }
 
 /// File size per category (video, photo, ...) below a node.

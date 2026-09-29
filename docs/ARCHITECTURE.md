@@ -44,6 +44,7 @@ struct Node {
 | `get_children` | `scan_id`, `node_id`, `sort_by` (size/name/modified/fileCount), `order` (asc/desc), `offset`, `limit` (maks 5000) | `ChildrenPage { total, items: Vec<NodeView> }` |
 | `get_category_summary` | `scan_id`, `node_id` | `Vec<CategorySize>` (`key, size, file_count`; `key` = nama kategori di config atau `other`) |
 | `get_node_path` | `scan_id`, `node_id` | `String` (hanya untuk tampilan/salin, tidak pernah diterima balik) |
+| `get_skipped` | `scan_id`, `offset`, `limit` (maks 5000) | `SkippedPage { total, items: [{ path, reason }] }` — item yang tidak bisa dibaca saat scan (FR-2); `reason` = teks error OS |
 | `get_largest_files` | `scan_id`, `limit` (maks 5000) | `Vec<FileView>` (`NodeView` + `path`) |
 | `reveal_in_explorer` | `scan_id`, `node_id` | — (path dihitung dari tree, D-015) |
 | `list_cleaner_rules` | — | `Vec<RuleInfo>` (`id, name, group, description, risk, default_checked`) |
@@ -82,7 +83,7 @@ Error command dikirim sebagai `{ code, message }` (`code` stabil untuk terjemaha
 ## Cleaner (`cleaner/`)
 1. `rules.rs`: memuat `config/cleaner-rules.<os>.json` yang disematkan (D-020) dengan validasi ketat — field asing ditolak, `group` wajib (`general`/`developer`, D-025), `action` hanya `trash`, `risk` hanya `low`/`medium` (medium tidak boleh dicentang default), `min_age_days ≥ 1`, id unik. `%VAR%` diekspansi (known folder via `dirs`, lalu env); variabel tak dikenal = error untuk root itu.
 2. `matcher.rs`: `files_in_root` (umur + ekstensi opsional, rekursif opsional) dan `named_directory` (`node_modules` + `package.json`, D-021). Walker tidak pernah mengikuti link dan tidak masuk folder terlindungi. Folder kandidat berisi link dikecualikan (D-022). Root yang berada di dalam root lain tidak dimasuki dari root luar (ditelusuri sendiri), dan kandidat dibuang duplikatnya.
-3. `preview(rule_ids)`: kandidat → `safety::validate` (yang gagal tidak pernah ditampilkan, hanya dihitung `excludedCount`) → urut terbesar → maks 10.000 per rule → disimpan di memori dengan `preview_id` (hanya satu preview aktif; preview baru menggantikan yang lama).
+3. `preview(rule_ids)`: kandidat → `safety::validate` (yang gagal tidak pernah ditampilkan, hanya dihitung `excludedCount`) → urut terbesar → maks 10.000 per rule → disimpan di memori dengan `preview_id` (hanya satu preview aktif; preview baru menggantikan yang lama). Item rule `named_directory` membawa `project_modified` (tanggal terbaru `package.json`/folder project) untuk ditampilkan.
 4. `execute(preview_id, item_ids)`: preview **dikonsumsi** (tidak bisa dipakai dua kali), ditolak jika > 30 menit atau > 10.000 item. Log dibuka dulu; kalau gagal, tidak ada aksi. Per item: `validate` ulang → `recheck` (fingerprint ukuran/waktu ubah harus sama, rule masih cocok) → cek Recycle Bin drive (D-019) → `trash::delete_all` per batch 100 (batch gagal diulang per item) → pastikan path sudah hilang. Setiap hasil langsung ditulis ke log.
 5. Log JSON lines: `<app_log_dir>/cleanup.jsonl` (Windows: `%LOCALAPPDATA%\com.sweepr.app\logs`). Field: `ts` (unix ms), `action` (`trash`/`emptyRecycleBin`), `previewId`, `ruleId`, `path`, `size`, `ok`, `reason`.
 6. `empty_recycle_bin` = `SHEmptyRecycleBinW` semua drive, tanpa dialog Windows (konfirmasi ada di UI), dicatat di log.
@@ -91,8 +92,9 @@ Error command dikirim sebagai `{ code, message }` (`code` stabil untuk terjemaha
 ## Frontend
 - `src/lib/api.ts`: pembungkus bertipe untuk semua `invoke` dan `listen`.
 - `src/views/`: `Home`, `ScanResult`, `Cleaner`.
-- `src/components/`: `DriveCard`, `ProgressBanner`, `Breadcrumb`, `CategoryBar`, `FolderTable`, `LargestFiles`, `RowActions`, `VirtualList`, `icons`, `ConfirmDialog` (`<dialog>` bawaan), `RuleCard`, `RecycleBinPanel`, `CleanupResultView`.
-- `src/hooks/`: `useScan` (siklus scan dari event), `useChildren` (isi folder per halaman 500 baris), `useAsync` (query sekali ambil).
+- `src/components/`: `DriveCard`, `ProgressBanner`, `Breadcrumb`, `CategoryBar`, `FolderTable`, `LargestFiles`, `RowActions`, `VirtualList`, `icons`, `ConfirmDialog` (`<dialog>` bawaan), `RuleCard`, `RecycleBinPanel`, `CleanupResultView`, `SkippedDialog` (FR-2), `states` (`Spinner`, `LoadingState`, `EmptyState`, `ErrorState` dengan "Coba lagi"), `I18nProvider`, `LanguageSwitch`.
+- `src/lib/i18n/`: kamus `id.ts` (acuan bentuk) + `en.ts`, `useI18n()` → `{ lang, setLang, t, fmt }`. Semua teks UI lewat `t`, semua angka/ukuran/tanggal lewat `fmt` (D-026). Pesan error backend dipetakan dari `code` ke `t.errors`; nama rule pembersih diterjemahkan lewat `t.rule.names[id]`.
+- `src/hooks/`: `useScan` (siklus scan dari event), `useChildren` (isi folder per halaman 500 baris), `useAsync` (query sekali ambil, dengan `retry`).
 - State sederhana (React state/context); jangan tambah library state di MVP.
 - Tabel memakai `VirtualList` (tinggi baris tetap, hanya baris terlihat di DOM) dan memuat `get_children` per halaman saat di-scroll (D-016).
 

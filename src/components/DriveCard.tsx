@@ -1,5 +1,5 @@
 import type { DriveInfo } from "../lib/api";
-import { formatBytes } from "../lib/format";
+import { useI18n } from "../lib/i18n";
 import { DriveIcon } from "./icons";
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 }
 
 export function DriveCard({ drive, disabled, onScan }: Props) {
+  const { t, fmt } = useI18n();
   const usedPct = drive.totalBytes > 0 ? (drive.usedBytes / drive.totalBytes) * 100 : 0;
   // Nearly full drives get a warning color.
   const barColor = usedPct >= 90 ? "bg-red-500" : "bg-blue-600";
@@ -27,7 +28,7 @@ export function DriveCard({ drive, disabled, onScan }: Props) {
           <div className="truncate font-medium">{title}</div>
           <div className="text-xs text-zinc-500">
             {drive.fileSystem}
-            {drive.isRemovable && " · removable"}
+            {drive.isRemovable && ` · ${t.drive.removable}`}
           </div>
         </div>
       </div>
@@ -37,18 +38,13 @@ export function DriveCard({ drive, disabled, onScan }: Props) {
         aria-valuenow={Math.round(usedPct)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`${title} terpakai`}
+        aria-label={t.drive.usedLabel(title)}
       >
         <div className={`h-full ${barColor}`} style={{ width: `${usedPct}%` }} />
       </div>
-      <div className="flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
-        <span>{formatBytes(drive.usedBytes)} terpakai</span>
-        <span>
-          <span className="font-medium text-zinc-900 dark:text-zinc-100">
-            {formatBytes(drive.availableBytes)}
-          </span>{" "}
-          sisa dari {formatBytes(drive.totalBytes)}
-        </span>
+      <div className="flex justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <span>{t.drive.used(fmt.bytes(drive.usedBytes))}</span>
+        <span>{t.drive.free(fmt.bytes(drive.availableBytes), fmt.bytes(drive.totalBytes))}</span>
       </div>
     </button>
   );

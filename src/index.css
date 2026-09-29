@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Light/dark follows the Windows setting (prefers-color-scheme, D-007). `color-scheme` makes
+   native parts follow too: scrollbars, checkboxes, <select>, <dialog>. */
+:root {
+  color-scheme: light dark;
+}
+
+/* Same background as the app before React renders, so dark mode does not flash white. */
+html,
+body {
+  @apply bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100;
+}

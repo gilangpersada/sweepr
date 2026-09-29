@@ -332,6 +332,13 @@ fn unreadable_folder_is_skipped_and_scan_continues() {
     assert_eq!(r.skipped.len(), 1, "{:?}", r.skipped);
     assert_eq!(r.skipped[0].path, root.join("locked"));
     assert!(!r.skipped[0].reason.is_empty());
+
+    // FR-2: the UI can list them page by page.
+    let page = r.skipped_page(0, 10);
+    assert_eq!(page.total, 1);
+    assert_eq!(page.items[0].path, root.join("locked").to_string_lossy());
+    assert!(r.skipped_page(1, 10).items.is_empty());
+    assert!(r.skipped_page(0, 0).items.is_empty());
 }
 
 // ---------- sessions ----------
