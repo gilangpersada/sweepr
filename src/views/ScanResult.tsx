@@ -10,13 +10,16 @@ interface Props {
   result: ScanFinishedEvent;
   onHome: () => void;
   onRescan: (path: string) => void;
+  onOpenCleaner: () => void;
+  /** False while another page covers this one; disables keyboard shortcuts. */
+  active: boolean;
 }
 
 type Tab = "folders" | "largest";
 
 const TOAST_MS = 2500;
 
-export function ScanResult({ result, onHome, onRescan }: Props) {
+export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: Props) {
   const { scanId, rootId, rootPath } = result;
   const [tab, setTab] = useState<Tab>("folders");
   const [trail, setTrail] = useState<Crumb[]>([{ id: rootId, name: rootPath }]);
@@ -39,7 +42,7 @@ export function ScanResult({ result, onHome, onRescan }: Props) {
 
   // Backspace goes up one folder, like Explorer.
   useEffect(() => {
-    if (tab !== "folders") return;
+    if (tab !== "folders" || !active) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (e.key !== "Backspace" || target?.closest("input, textarea")) return;
@@ -48,7 +51,7 @@ export function ScanResult({ result, onHome, onRescan }: Props) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [tab]);
+  }, [tab, active]);
 
   const tabClass = (t: Tab) =>
     `border-b-2 px-3 py-2 text-sm font-medium ${
@@ -88,6 +91,13 @@ export function ScanResult({ result, onHome, onRescan }: Props) {
           className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
         >
           Scan ulang
+        </button>
+        <button
+          type="button"
+          onClick={onOpenCleaner}
+          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        >
+          Pembersih
         </button>
       </header>
 

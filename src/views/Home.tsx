@@ -10,9 +10,10 @@ interface Props {
   scan: ScanState;
   onScan: (path: string) => void;
   onCancel: () => void;
+  onOpenCleaner: () => void;
 }
 
-export function Home({ scan, onScan, onCancel }: Props) {
+export function Home({ scan, onScan, onCancel, onOpenCleaner }: Props) {
   const drives = useAsync(listDrives);
   const [pickError, setPickError] = useState<string | null>(null);
   const scanning = scan.status === "scanning";
@@ -74,6 +75,21 @@ export function Home({ scan, onScan, onCancel }: Props) {
           Pilih folder…
         </button>
         {pickError && <p className="text-sm text-red-600 dark:text-red-400">{pickError}</p>}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Pembersih</h2>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Temukan file sementara, installer lama, dan node_modules yang tidak terpakai, lalu
+          pindahkan ke Recycle Bin setelah Anda periksa.
+        </p>
+        <button
+          type="button"
+          onClick={onOpenCleaner}
+          className="rounded-md border border-zinc-300 px-4 py-2 font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        >
+          Buka Pembersih
+        </button>
       </section>
     </div>
   );

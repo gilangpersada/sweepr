@@ -23,7 +23,7 @@
       "description": "File installer/arsip besar di Downloads yang tidak disentuh lebih dari 30 hari.",
       "risk": "low",
       "default_checked": true,
-      "allowed_roots": ["%USERPROFILE%\\Downloads"],
+      "allowed_roots": ["%DOWNLOADS%"],
       "match": {
         "type": "files_in_root",
         "recursive": false,

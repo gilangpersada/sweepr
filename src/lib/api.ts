@@ -160,3 +160,104 @@ export async function pickFolder(): Promise<string | null> {
   const picked = await open({ directory: true, multiple: false });
   return typeof picked === "string" ? picked : null;
 }
+
+// ---------- cleaner ----------
+// Only rule ids, a preview id and item ids go to the backend; never paths.
+
+/** Error shape of cleaner commands. */
+export interface CleanerError {
+  code:
+    | "rulesInvalid"
+    | "unknownRule"
+    | "unknownPreview"
+    | "previewExpired"
+    | "tooManyItems"
+    | "logUnavailable"
+    | "recycleBin"
+    | "internal";
+  message: string;
+}
+
+export type Risk = "low" | "medium";
+
+export interface RuleInfo {
+  id: string;
+  name: string;
+  description: string;
+  risk: Risk;
+  defaultChecked: boolean;
+}
+
+export interface PreviewItem {
+  itemId: number;
+  /** Display only. */
+  path: string;
+  isDir: boolean;
+  size: number;
+  /** Unix seconds. */
+  modified: number | null;
+}
+
+export interface RulePreview extends RuleInfo {
+  /** Largest first. */
+  items: PreviewItem[];
+  totalBytes: number;
+  truncated: boolean;
+  excludedCount: number;
+  unreadableCount: number;
+  rootProblems: string[];
+}
+
+export interface CleanupPreview {
+  previewId: number;
+  maxItems: number;
+  rules: RulePreview[];
+}
+
+export interface FailReason {
+  code: string;
+  message: string;
+}
+
+export interface ItemOutcome {
+  itemId: number;
+  path: string;
+  size: number;
+  isDir: boolean;
+  /** `null` when the item is now in the Recycle Bin. */
+  error: FailReason | null;
+}
+
+export interface CleanupResult {
+  previewId: number;
+  trashedCount: number;
+  trashedBytes: number;
+  failedCount: number;
+  items: ItemOutcome[];
+}
+
+export interface RecycleBinInfo {
+  sizeBytes: number;
+  itemCount: number;
+}
+
+export function listCleanerRules(): Promise<RuleInfo[]> {
+  return invoke<RuleInfo[]>("list_cleaner_rules");
+}
+
+export function previewCleanup(ruleIds: string[]): Promise<CleanupPreview> {
+  return invoke<CleanupPreview>("preview_cleanup", { ruleIds });
+}
+
+export function executeCleanup(previewId: number, itemIds: number[]): Promise<CleanupResult> {
+  return invoke<CleanupResult>("execute_cleanup", { previewId, itemIds });
+}
+
+export function getRecycleBinInfo(): Promise<RecycleBinInfo> {
+  return invoke<RecycleBinInfo>("get_recycle_bin_info");
+}
+
+/** Permanently empties the Recycle Bin. Always confirm with the user first. */
+export function emptyRecycleBin(): Promise<void> {
+  return invoke("empty_recycle_bin");
+}

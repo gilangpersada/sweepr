@@ -4,6 +4,8 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 
+pub use super::unix::*;
+
 pub const CLEANER_RULES_JSON: &str = include_str!("../../../config/cleaner-rules.macos.json");
 
 /// Opens Finder with `path` selected.
