@@ -97,25 +97,26 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - **Belum:** uji install/uninstall dan tampilan app hasil build di PC pemilik; catatan pemakaian 2 minggu (template di `DECISIONS.md`).
 
 ## M5 — Redesign UI: menu, Neo-Brutalism, animasi (setelah MVP)
-Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism, animasi dengan `motion`, dan loading screen beranimasi. Tidak mengubah backend, perilaku scan, atau aturan keamanan pembersih. Boleh dikerjakan selama masa pemakaian 2 minggu M4; catatan pemakaian tetap diisi. Keputusan: D-031 s/d D-033 (lihat juga "Pertanyaan terbuka untuk M5" di `DECISIONS.md`).
+Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism, animasi dengan `motion`, dan loading screen beranimasi. Tidak mengubah backend, perilaku scan, atau aturan keamanan pembersih. Boleh dikerjakan selama masa pemakaian 2 minggu M4; catatan pemakaian tetap diisi. Keputusan: D-031 s/d D-035 (lihat juga "Pertanyaan terbuka untuk M5" di `DECISIONS.md`).
 
 **Persiapan**
-- [ ] Jawab pertanyaan terbuka M5 di `DECISIONS.md` (font, palet warna, toggle tema, lebar sidebar)
+- [x] Jawab pertanyaan terbuka M5 di `DECISIONS.md` (font, palet warna, toggle tema, lebar sidebar) — dijawab 2026-09-29: D-031, D-033 s/d D-035
 - [ ] Tambah dependency `motion` (D-032); pakai `LazyMotion` + `m` supaya bundle kecil
 - [ ] Design token Neo-Brutalism di `src/index.css` (`@theme` Tailwind v4): warna, border tebal, bayangan keras, radius, font; versi terang dan gelap (D-031)
-- [ ] Font disimpan lokal di repo (tanpa jaringan, sesuai CSP D-009), lisensi dicatat
+- [ ] Font lokal Space Grotesk + JetBrains Mono (`.woff2` + lisensi OFL di `src/assets/fonts/`, D-031); tanpa jaringan (CSP D-009)
 - [ ] Komponen dasar di `src/components/ui/`: `Button` (primary/secondary/danger), `Card`, `Badge`, `Tabs`, `Checkbox`, `Input`, `ProgressBar`, `Dialog`; komponen lama beralih memakainya
 
 **Menu & pemisahan fitur**
-- [ ] `AppShell`: sidebar menu di kiri + area konten; sidebar menciut jadi ikon di jendela sempit (min. lebar 800 px)
-- [ ] Menu (D-033): **Beranda** (drive + pilih folder), **Hasil Scan** (aktif setelah scan; tab Folder / File Terbesar / Kategori), **Pembersih**, **Recycle Bin** (dipisah dari layar Pembersih), **Pengaturan** (bahasa, info versi)
+- [ ] `AppShell`: sidebar menu di kiri + area konten; sidebar selalu lebar, ikon + teks (D-033)
+- [ ] Menu (D-033): **Beranda** (drive + pilih folder), **Hasil Scan** (aktif setelah scan; tab Folder / File Terbesar / Kategori), **Pembersih**, **Recycle Bin** (dipisah dari layar Pembersih), **Pengaturan** (bahasa, tema, info versi)
 - [ ] Pindah menu tidak menghapus hasil scan atau posisi folder; progress scan yang sedang jalan terlihat dari menu mana pun (indikator di sidebar)
 - [ ] Pilihan bahasa pindah dari Beranda ke Pengaturan
 - [ ] Navigasi keyboard: menu bisa dipakai dengan Tab/Enter, fokus selalu terlihat
 
 **Tema Neo-Brutalism**
 - [ ] Terapkan ke semua layar: Beranda, Hasil Scan (tabel, breadcrumb, kategori, file terbesar), Pembersih, Recycle Bin, Pengaturan, semua dialog, state kosong/error/loading
-- [ ] Tema terang dan gelap tetap ikut Windows (D-007, D-029)
+- [ ] Pilihan tema di Pengaturan: Ikut sistem (bawaan) / Terang / Gelap, diingat antar sesi; `dark:` Tailwind memakai atribut `data-theme` (D-034)
+- [ ] Tema dipasang sebelum render pertama (skrip kecil di file terpisah, bukan inline) supaya tidak berkedip, termasuk splash; title bar jendela ikut tema
 - [ ] Kontras teks minimal WCAG AA di kedua tema
 - [ ] Aksi berbahaya (Pindahkan ke Recycle Bin, Kosongkan Recycle Bin) tetap paling jelas dibedakan (warna danger + ikon + teks), sesuai SAFETY_RULES
 
@@ -130,7 +131,8 @@ Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism,
 
 **Loading screen**
 - [ ] Splash statis di `index.html` (CSS inline, tampil sebelum JavaScript dimuat) supaya tidak ada layar kosong/putih
-- [ ] React mengambil alih dengan animasi: logo rubah menyapu + nama app + indikator muat
+- [ ] Logo SVG rubah menyapu (D-035): digambar ulang dari `source-clean.png`, sapu/ekor/debu jadi grup terpisah; tampilannya disetujui pemilik sebelum dianimasikan
+- [ ] React mengambil alih dengan animasi: sapu bergerak menyapu, debu beterbangan, nama app + indikator muat
 - [ ] Splash hilang (animasi keluar) setelah data awal siap (`list_drives`); tampil minimal ±600 ms supaya tidak berkedip, tanpa jeda buatan lain
 - [ ] Bila data awal gagal: splash berganti ke `ErrorState` dengan "Coba lagi", bukan macet
 - [ ] Dengan reduced motion: logo statis, hanya fade

@@ -95,7 +95,7 @@ Semua ketentuan di `SAFETY_RULES.md` berlaku. Jika ada konflik, SAFETY_RULES men
 - Instalasi ringan (target < 30 MB installer).
 - App tidak butuh hak admin di MVP (installer butuh admin karena memasang ke Program Files, D-030).
 - Teks UI dalam Bahasa Indonesia dan Inggris (ikut bahasa Windows, bisa diganti di Beranda); semua teks di satu kamus per bahasa (D-026).
-- Tema terang/gelap mengikuti sistem.
+- Tema terang/gelap mengikuti sistem; sejak M5 bisa dipilih manual di Pengaturan (Ikut sistem / Terang / Gelap, D-034).
 - Animasi (sejak M5, D-032) mengikuti pengaturan "Animation effects" Windows (reduced motion) dan tidak boleh membuat UI tersendat atau menunda dialog konfirmasi.
 
 ## 9. Layar (wireframe teks)
@@ -118,7 +118,7 @@ node_modules... ...
 [Tab: Folder | File Terbesar]        [Pembersih]  ← layar sendiri (D-023)
 ```
 
-**Tata letak M5 (rencana, D-031 s/d D-033)** — Layar 1–3 menjadi isi menu; gaya Neo-Brutalism.
+**Tata letak M5 (rencana, D-031 s/d D-035)** — Layar 1–3 menjadi isi menu; gaya Neo-Brutalism.
 ```
 +--------------+------------------------------------------+
 | SWEEPR       |  (isi menu yang dipilih)                 |
