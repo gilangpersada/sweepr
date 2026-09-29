@@ -35,9 +35,9 @@ Cek sebelum commit: `npm run lint && npm run typecheck`, `cargo clippy --manifes
 
 1. `npm run tauri build` — build pertama mengunduh tool NSIS dari GitHub (hanya saat build).
 2. Hasil: `src-tauri/target/release/bundle/nsis/Sweepr_<versi>_x64-setup.exe`.
-3. Jalankan installer. Terpasang per pengguna, **tanpa hak admin** (D-027).
+3. Jalankan installer. Terpasang per mesin di `C:\Program Files\Sweepr`, **butuh hak admin** (prompt UAC, D-030). App sendiri tetap berjalan sebagai pengguna biasa.
 4. Installer belum ditandatangani, jadi Windows SmartScreen menampilkan "Windows protected your PC": klik **More info → Run anyway**.
-5. Uninstall lewat **Settings → Apps → Installed apps → Sweepr**.
+5. Uninstall lewat **Settings → Apps → Installed apps → Sweepr** (juga meminta admin).
 
 Log pembersihan: `%LOCALAPPDATA%\com.sweepr.app\logs\cleanup.jsonl`.
 
