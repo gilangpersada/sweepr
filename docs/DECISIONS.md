@@ -37,7 +37,8 @@
 | D-032 | Dependency `motion` (paket npm `motion`, dulu Framer Motion) untuk animasi, dengan `LazyMotion` + `m` dan `MotionConfig reducedMotion="user"` | Diminta pemilik; animasi deklaratif untuk React (transisi halaman, dialog keluar-masuk, stagger) yang sulit dengan CSS saja; lokal, tanpa jaringan. Catat ukuran bundle sebelum/sesudah |
 | D-033 | Navigasi pakai sidebar menu yang **selalu lebar** (ikon + teks, tidak bisa diciutkan): Beranda, Hasil Scan, Pembersih, Recycle Bin, Pengaturan. Recycle Bin dipisah dari layar Pembersih; pilihan bahasa pindah ke Pengaturan. Tetap state React biasa (tanpa router/library state); view yang sudah dibuka tetap ter-mount supaya hasil scan dan posisi folder tidak hilang | Diminta pemilik ("pisahkan antar fitur"). Melanjutkan D-023; tanpa `react-router` karena hanya 5 halaman tanpa URL. Lebar sidebar dipilih pemilik (2026-09-29); jendela minimum 800 px tetap cukup |
 | D-034 | Pilihan tema di Pengaturan: **Ikut sistem** (bawaan) / **Terang** / **Gelap**, disimpan di `localStorage` seperti bahasa. Varian `dark:` Tailwind pindah dari media query ke atribut `data-theme` di `<html>` (`@custom-variant dark`); `color-scheme` mengikuti pilihan. Tema dipasang sebelum render pertama lewat skrip kecil di file terpisah (skrip inline diblokir CSP D-009) supaya tidak berkedip. Title bar jendela ikut tema lewat API window Tauri; izin tambahannya dicatat saat implementasi | Diminta pemilik (2026-09-29). Menyesuaikan D-007/D-029 |
-| D-035 | Logo loading screen berupa **SVG** rubah menyapu, digambar ulang dari `source-clean.png` (D-028). Bagian yang dianimasikan (sapu, ekor, debu) jadi grup SVG terpisah ber-`id`; disimpan di `src/assets/`. Ikon app (`.ico`/PNG) tidak berubah | Diminta pemilik (2026-09-29): PNG tidak bisa dianimasikan per bagian |
+| D-035 | Logo loading screen berupa **SVG** rubah menyapu, digambar ulang dari `source-clean.png` (D-028), bagian yang dianimasikan jadi grup terpisah. **Digantikan D-036** | Draf Claude dan draf pemilik sama-sama belum memuaskan (2026-09-29) |
+| D-036 | Loading screen **tanpa logo**: hanya teks dan bentuk bergaya Neo-Brutalism yang dianimasikan dengan `motion`. Wordmark "SWEEPR" (Space Grotesk tebal), tiap huruf di dalam ubin berborder tebal + bayangan keras, jatuh satu per satu (stagger). Di bawahnya, beberapa kotak/bulatan kecil ("debu") disapu oleh balok kuning dari kiri ke kanan secara berulang selama memuat (jadi indikator muat). Keluar: ubin turun/menghilang, isi app muncul. Reduced motion: wordmark statis + fade. Splash statis `index.html` = wordmark yang sama tanpa gerak. Ikon app (`.ico`/PNG, D-028) tidak berubah | Diminta pemilik (2026-09-29): lebih mudah dibuat rapi daripada ilustrasi, dan cocok dengan gaya Neo-Brutalism. Tanpa file gambar tambahan |
 
 ## Pertanyaan terbuka
 - **Ketersediaan nama "Sweepr"** (D-010): cek merek dagang, domain, crates.io/npm sebelum rilis publik.
@@ -49,7 +50,7 @@
 Sudah diputuskan di awal M2: lihat D-014 s/d D-017.
 
 ## Pertanyaan terbuka untuk M5
-Sudah dijawab pemilik (2026-09-29): font dan palet (D-031), sidebar selalu lebar (D-033), pilihan tema manual (D-034), logo SVG (D-035).
+Sudah dijawab pemilik (2026-09-29): font dan palet (D-031), sidebar selalu lebar (D-033), pilihan tema manual (D-034), logo SVG (D-035, lalu diganti loading screen tanpa logo D-036).
 
 ## Catatan pemakaian 2 minggu (M4)
 Isi setelah memakai build installer di PC sendiri selama ±2 minggu (mulai: ____, selesai: ____). Tulis singkat; jadi dasar memilih v0.2 (lihat ROADMAP).
