@@ -145,6 +145,17 @@ export function getCategorySummary(scanId: ScanId, nodeId: number): Promise<Cate
   return invoke<CategorySize[]>("get_category_summary", { scanId, nodeId });
 }
 
+export interface SkippedPage {
+  total: number;
+  /** `reason` is the OS error text (in the Windows display language). */
+  items: { path: string; reason: string }[];
+}
+
+/** Entries the scan could not read (FR-2), a page at a time. */
+export function getSkipped(scanId: ScanId, offset: number, limit: number): Promise<SkippedPage> {
+  return invoke<SkippedPage>("get_skipped", { scanId, offset, limit });
+}
+
 /** Full path of a node, for display and "copy path" only. */
 export function getNodePath(scanId: ScanId, nodeId: number): Promise<string> {
   return invoke<string>("get_node_path", { scanId, nodeId });
@@ -200,6 +211,8 @@ export interface PreviewItem {
   size: number;
   /** Unix seconds. */
   modified: number | null;
+  /** node_modules-style rules: when the project last changed (what the age check uses). */
+  projectModified: number | null;
 }
 
 export interface RulePreview extends RuleInfo {

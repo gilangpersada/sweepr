@@ -1,34 +1,43 @@
+// Number, size and date formatting for one locale. Components get a bound set through
+// `useI18n().fmt`, so the output follows the chosen language ("1,5 GB" vs "1.5 GB").
+
 const UNITS = ["B", "KB", "MB", "GB", "TB"];
 
-/** Human-readable size using 1024-based units, e.g. 1536 -> "1,5 KB". */
-export function formatBytes(bytes: number): string {
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < UNITS.length - 1) {
-    value /= 1024;
-    unit++;
-  }
-  const digits = unit === 0 || value >= 100 ? 0 : 1;
-  return `${value.toLocaleString("id-ID", { maximumFractionDigits: digits })} ${UNITS[unit]}`;
+export interface Formatters {
+  /** 1024-based size, e.g. 1536 -> "1,5 KB". */
+  bytes: (bytes: number) => string;
+  count: (n: number) => string;
+  /** Unix seconds -> "3 Sep 2026", or "—" when unknown. */
+  date: (unixSeconds: number | null) => string;
+  /** 12.345 -> "12,3%"; tiny non-zero values show as "<0,1%". */
+  percent: (pct: number) => string;
+  /** Milliseconds -> seconds with one decimal, e.g. 13100 -> "13,1". */
+  seconds: (ms: number) => string;
 }
 
-export function formatCount(n: number): string {
-  return n.toLocaleString("id-ID");
-}
+export function makeFormatters(locale: string): Formatters {
+  const number = (n: number, digits: number) =>
+    n.toLocaleString(locale, { maximumFractionDigits: digits });
+  const dateFmt = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
-const DATE_FMT = new Intl.DateTimeFormat("id-ID", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-});
-
-/** Unix seconds -> "3 Sep 2026", or "—" when unknown. */
-export function formatDate(unixSeconds: number | null): string {
-  return unixSeconds === null ? "—" : DATE_FMT.format(new Date(unixSeconds * 1000));
-}
-
-/** 12.345 -> "12,3%"; tiny non-zero values show as "<0,1%". */
-export function formatPercent(pct: number): string {
-  if (pct > 0 && pct < 0.1) return "<0,1%";
-  return `${pct.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`;
+  return {
+    bytes(bytes) {
+      let value = bytes;
+      let unit = 0;
+      while (value >= 1024 && unit < UNITS.length - 1) {
+        value /= 1024;
+        unit++;
+      }
+      const digits = unit === 0 || value >= 100 ? 0 : 1;
+      return `${number(value, digits)} ${UNITS[unit]}`;
+    },
+    count: (n) => n.toLocaleString(locale),
+    date: (s) => (s === null ? "—" : dateFmt.format(new Date(s * 1000))),
+    percent: (pct) => (pct > 0 && pct < 0.1 ? `<${number(0.1, 1)}%` : `${number(pct, 1)}%`),
+    seconds: (ms) => number(ms / 1000, 1),
+  };
 }

@@ -117,6 +117,9 @@ pub struct PreviewItem {
     pub is_dir: bool,
     pub size: u64,
     pub modified: Option<i64>,
+    /// `named_directory` rules: when the project last changed (newest of the marker file
+    /// and the project folder), which is what the age check uses. `None` for plain files.
+    pub project_modified: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -317,6 +320,10 @@ impl Cleaner {
                     is_dir: c.is_dir,
                     size: c.size,
                     modified: c.modified,
+                    project_modified: c
+                        .fingerprint
+                        .marker_modified
+                        .max(c.fingerprint.project_modified),
                 });
                 items.push(StoredItem {
                     rule: rule_idx,

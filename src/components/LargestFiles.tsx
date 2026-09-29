@@ -2,9 +2,10 @@ import { useCallback } from "react";
 import { useAsync } from "../hooks/useAsync";
 import { getLargestFiles, type ScanId } from "../lib/api";
 import { errorMessage } from "../lib/errors";
-import { formatBytes, formatDate } from "../lib/format";
+import { useI18n } from "../lib/i18n";
 import { FileIcon } from "./icons";
 import { RowActions } from "./RowActions";
+import { EmptyState, ErrorState, LoadingState } from "./states";
 import { VirtualList } from "./VirtualList";
 
 /** How many files the tab lists. The backend caps a single call at 5000. */
@@ -18,17 +19,16 @@ interface Props {
 }
 
 export function LargestFiles({ scanId, notify }: Props) {
+  const { t, fmt } = useI18n();
   const load = useCallback(() => getLargestFiles(scanId, LIMIT), [scanId]);
   const result = useAsync(load);
 
-  if (result.status === "loading") return <p className="p-4 text-sm text-zinc-500">Memuat…</p>;
+  if (result.status === "loading") return <LoadingState />;
   if (result.status === "error") {
-    return (
-      <p className="p-4 text-sm text-red-600 dark:text-red-400">{errorMessage(result.error)}</p>
-    );
+    return <ErrorState message={errorMessage(t, result.error)} onRetry={result.retry} />;
   }
   const files = result.data;
-  if (files.length === 0) return <p className="p-4 text-sm text-zinc-500">Tidak ada file.</p>;
+  if (files.length === 0) return <EmptyState text={t.table.noFiles} />;
 
   const header = (
     <div
@@ -38,13 +38,13 @@ export function LargestFiles({ scanId, notify }: Props) {
       <div role="columnheader" className="text-right">
         #
       </div>
-      <div role="columnheader">Nama &amp; lokasi</div>
+      <div role="columnheader">{t.table.nameAndLocation}</div>
       <div role="columnheader" className="text-right">
-        Ukuran
+        {t.table.size}
       </div>
-      <div role="columnheader">Diubah</div>
+      <div role="columnheader">{t.table.modified}</div>
       <div role="columnheader" className="text-right">
-        Aksi
+        {t.table.actions}
       </div>
     </div>
   );
@@ -76,10 +76,10 @@ export function LargestFiles({ scanId, notify }: Props) {
               </div>
             </div>
             <div role="cell" className="text-right tabular-nums">
-              {formatBytes(f.size)}
+              {fmt.bytes(f.size)}
             </div>
             <div role="cell" className="text-zinc-600 dark:text-zinc-400">
-              {formatDate(f.modified)}
+              {fmt.date(f.modified)}
             </div>
             <div role="cell">
               <RowActions scanId={scanId} nodeId={f.id} path={f.path} notify={notify} />

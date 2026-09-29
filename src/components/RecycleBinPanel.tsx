@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { emptyRecycleBin, type RecycleBinInfo } from "../lib/api";
 import { errorMessage } from "../lib/errors";
-import { formatBytes, formatCount } from "../lib/format";
+import { countOf, useI18n } from "../lib/i18n";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ErrorState } from "./states";
 
 interface Props {
   info: RecycleBinInfo | null;
@@ -12,10 +13,13 @@ interface Props {
 
 /** Recycle Bin size plus the only permanent delete in the app, behind its own confirmation. */
 export function RecycleBinPanel({ info, onChanged }: Props) {
+  const i18n = useI18n();
+  const { t, fmt } = i18n;
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const empty = info !== null && info.itemCount === 0;
+  const items = info ? countOf(i18n, info.itemCount, t.units.items) : "";
 
   async function run() {
     setBusy(true);
@@ -25,7 +29,7 @@ export function RecycleBinPanel({ info, onChanged }: Props) {
       setConfirming(false);
       onChanged();
     } catch (e) {
-      setError(errorMessage(e));
+      setError(errorMessage(t, e));
       setConfirming(false);
     } finally {
       setBusy(false);
@@ -34,18 +38,13 @@ export function RecycleBinPanel({ info, onChanged }: Props) {
 
   return (
     <section className="flex flex-wrap items-center gap-4 rounded-lg bg-zinc-100 p-4 dark:bg-zinc-800">
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 space-y-1">
         <div className="font-medium">
-          Recycle Bin:{" "}
-          {info
-            ? `${formatBytes(info.sizeBytes)} (${formatCount(info.itemCount)} item)`
-            : "memuat…"}
+          {t.recycleBin.label}{" "}
+          {info ? `${fmt.bytes(info.sizeBytes)} (${items})` : t.recycleBin.loading}
         </div>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          File yang dibersihkan dipindah ke sini dan masih bisa dipulihkan. Ruang disk baru
-          benar-benar kosong setelah Recycle Bin dikosongkan.
-        </p>
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.recycleBin.explain}</p>
+        {error && <ErrorState message={error} />}
       </div>
       <button
         type="button"
@@ -53,32 +52,20 @@ export function RecycleBinPanel({ info, onChanged }: Props) {
         onClick={() => setConfirming(true)}
         className="rounded-md border border-red-400 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/40"
       >
-        Kosongkan Recycle Bin…
+        {t.recycleBin.empty}
       </button>
 
       <ConfirmDialog
         open={confirming}
-        title="Kosongkan Recycle Bin?"
+        title={t.recycleBin.confirmTitle}
         tone="danger"
-        confirmLabel="Hapus permanen"
+        confirmLabel={t.recycleBin.confirmButton}
         busy={busy}
         onConfirm={() => void run()}
         onCancel={() => setConfirming(false)}
       >
-        <p>
-          Semua isi Recycle Bin di semua drive
-          {info && (
-            <>
-              {" "}
-              (<strong>{formatCount(info.itemCount)} item</strong>,{" "}
-              <strong>{formatBytes(info.sizeBytes)}</strong>)
-            </>
-          )}{" "}
-          akan dihapus permanen, termasuk file yang Anda buang sendiri di luar Sweepr.
-        </p>
-        <p className="font-medium text-red-600 dark:text-red-400">
-          Tindakan ini tidak bisa dibatalkan.
-        </p>
+        {info && <p>{t.recycleBin.confirmLead(items, fmt.bytes(info.sizeBytes))}</p>}
+        <p className="font-medium text-red-600 dark:text-red-400">{t.recycleBin.cannotUndo}</p>
       </ConfirmDialog>
     </section>
   );

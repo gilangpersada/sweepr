@@ -94,7 +94,7 @@ Semua ketentuan di `SAFETY_RULES.md` berlaku. Jika ada konflik, SAFETY_RULES men
 - Lokal penuh: tanpa jaringan, telemetri, atau akun.
 - Instalasi ringan (target < 30 MB installer).
 - Tidak butuh hak admin di MVP.
-- Teks UI dalam Bahasa Indonesia; siapkan struktur i18n sederhana (kunci teks di satu tempat) agar bisa ditambah Inggris.
+- Teks UI dalam Bahasa Indonesia dan Inggris (ikut bahasa Windows, bisa diganti di Beranda); semua teks di satu kamus per bahasa (D-026).
 - Tema terang/gelap mengikuti sistem.
 
 ## 9. Layar (wireframe teks)
@@ -143,6 +143,6 @@ Lihat `DECISIONS.md` bagian "Pertanyaan terbuka".
 ## 12. Definition of Done — MVP
 - [ ] Semua FR-1 s/d FR-7 berfungsi di Windows 11
 - [ ] Dipakai di PC sendiri tanpa insiden data hilang
-- [ ] Tes otomatis untuk scanner, safety, dan rule matching lulus
-- [ ] Build installer Windows berhasil (`npm run tauri build`)
+- [x] Tes otomatis untuk scanner, safety, dan rule matching lulus (72 tes, M4)
+- [x] Build installer Windows berhasil (`npm run tauri build`) — `Sweepr_0.1.0_x64-setup.exe`, 1,59 MB
 - [ ] `TASKS.md` semua milestone M0–M4 tercentang

@@ -13,6 +13,7 @@ use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use jwalk::rayon::prelude::*;
 use jwalk::WalkDirGeneric;
+use serde::Serialize;
 
 use super::category::{Categories, CategoryId};
 use super::error::ScanError;
@@ -58,6 +59,41 @@ pub struct ScanResult {
     pub categories: Arc<Categories>,
     pub skipped: Vec<Skipped>,
     pub elapsed: Duration,
+}
+
+/// One page of the entries a scan could not read, for the UI (FR-2).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkippedPage {
+    pub total: usize,
+    pub items: Vec<SkippedView>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SkippedView {
+    pub path: String,
+    /// OS error text, e.g. "Access is denied. (os error 5)".
+    pub reason: String,
+}
+
+impl ScanResult {
+    /// Unreadable entries in the order they were met, `limit` at a time.
+    pub fn skipped_page(&self, offset: usize, limit: usize) -> SkippedPage {
+        SkippedPage {
+            total: self.skipped.len(),
+            items: self
+                .skipped
+                .iter()
+                .skip(offset)
+                .take(limit)
+                .map(|s| SkippedView {
+                    path: s.path.to_string_lossy().into_owned(),
+                    reason: s.reason.clone(),
+                })
+                .collect(),
+        }
+    }
 }
 
 #[derive(Debug)]

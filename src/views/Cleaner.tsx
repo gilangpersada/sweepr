@@ -3,6 +3,7 @@ import { CleanupResultView } from "../components/CleanupResultView";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { RecycleBinPanel } from "../components/RecycleBinPanel";
 import { RuleCard } from "../components/RuleCard";
+import { EmptyState, ErrorState, LoadingState } from "../components/states";
 import {
   executeCleanup,
   getRecycleBinInfo,
@@ -15,7 +16,7 @@ import {
   type RulePreview,
 } from "../lib/api";
 import { errorCode, errorMessage } from "../lib/errors";
-import { formatBytes, formatCount } from "../lib/format";
+import { countOf, useI18n, type Messages } from "../lib/i18n";
 
 type View =
   | { kind: "loading" }
@@ -31,14 +32,13 @@ function defaultSelection(p: CleanupPreview): Set<number> {
 }
 
 /** Sections of the screen, in display order. */
-const GROUPS: { id: RuleGroup; title: string; hint?: string }[] = [
-  { id: "general", title: "Umum" },
-  {
-    id: "developer",
-    title: "Cache Developer",
-    hint: "Untuk developer: folder yang bisa dibuat ulang dari project (mis. npm install). Tidak dicentang otomatis; project yang masih aktif tidak ikut.",
-  },
-];
+const GROUPS: RuleGroup[] = ["general", "developer"];
+
+function groupText(t: Messages, group: RuleGroup): { title: string; hint?: string } {
+  return group === "general"
+    ? { title: t.cleaner.groupGeneral }
+    : { title: t.cleaner.groupDeveloper, hint: t.cleaner.groupDeveloperHint };
+}
 
 /** Previews every rule; the UI decides what is checked. */
 async function loadPreview(): Promise<View> {
@@ -55,6 +55,8 @@ interface Props {
 }
 
 export function Cleaner({ onBack }: Props) {
+  const i18n = useI18n();
+  const { t, fmt } = i18n;
   const [view, setView] = useState<View>({ kind: "loading" });
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [confirming, setConfirming] = useState(false);
@@ -94,7 +96,9 @@ export function Cleaner({ onBack }: Props) {
     [preview],
   );
   const selectedBytes = [...selected].reduce((sum, id) => sum + (sizes.get(id) ?? 0), 0);
+  const selectedItems = countOf(i18n, selected.size, t.units.items);
   const tooMany = preview !== null && selected.size > preview.maxItems;
+  const nothingFound = preview !== null && preview.rules.every((r) => r.items.length === 0);
 
   const toggleRule = useCallback((rule: RulePreview, checked: boolean) => {
     setSelected((s) => {
@@ -127,7 +131,7 @@ export function Cleaner({ onBack }: Props) {
       refreshBin();
     } catch (e) {
       setConfirming(false);
-      setNotice(errorMessage(e));
+      setNotice(errorMessage(t, e));
       // The preview is gone or stale: make a fresh one so the list matches the disk.
       if (errorCode(e) === "previewExpired" || errorCode(e) === "unknownPreview") reload();
     } finally {
@@ -143,53 +147,51 @@ export function Cleaner({ onBack }: Props) {
           onClick={onBack}
           className="text-sm text-blue-600 hover:underline dark:text-blue-400"
         >
-          ← Kembali
+          {t.common.back}
         </button>
-        <h1 className="flex-1 font-semibold">Pembersih</h1>
+        <h1 className="flex-1 font-semibold">{t.cleaner.title}</h1>
         <button
           type="button"
           onClick={reload}
           disabled={view.kind === "loading" || busy}
           className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
         >
-          Muat ulang
+          {t.cleaner.reload}
         </button>
       </header>
 
       <div className="mx-auto w-full max-w-4xl flex-1 space-y-4 overflow-y-auto p-6">
         <RecycleBinPanel info={bin} onChanged={refreshBin} />
         {notice && (
-          <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+          <p
+            role="alert"
+            className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+          >
             {notice}
           </p>
         )}
 
-        {view.kind === "loading" && (
-          <p className="flex items-center gap-3 text-sm text-zinc-500">
-            <span className="size-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-            Mencari file yang bisa dibersihkan… (bisa beberapa detik)
-          </p>
-        )}
+        {view.kind === "loading" && <LoadingState text={t.cleaner.searching} />}
         {view.kind === "error" && (
-          <p className="text-sm text-red-600 dark:text-red-400">{errorMessage(view.error)}</p>
+          <ErrorState message={errorMessage(t, view.error)} onRetry={reload} />
         )}
         {view.kind === "done" && <CleanupResultView result={view.result} onDone={reload} />}
+        {nothingFound && <EmptyState text={t.cleaner.nothingFound} />}
         {preview &&
           GROUPS.map((group) => {
-            const rules = preview.rules.filter((r) => r.group === group.id);
+            const rules = preview.rules.filter((r) => r.group === group);
             if (rules.length === 0) return null;
+            const { title, hint } = groupText(t, group);
             return (
-              <section key={group.id} aria-labelledby={`group-${group.id}`} className="space-y-3">
+              <section key={group} aria-labelledby={`group-${group}`} className="space-y-3">
                 <div>
                   <h2
-                    id={`group-${group.id}`}
+                    id={`group-${group}`}
                     className="text-sm font-semibold uppercase tracking-wide text-zinc-500"
                   >
-                    {group.title}
+                    {title}
                   </h2>
-                  {group.hint && (
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{group.hint}</p>
-                  )}
+                  {hint && <p className="text-sm text-zinc-600 dark:text-zinc-400">{hint}</p>}
                 </div>
                 {rules.map((rule) => (
                   <RuleCard
@@ -208,13 +210,13 @@ export function Cleaner({ onBack }: Props) {
       {preview && (
         <footer className="flex flex-wrap items-center gap-4 border-t border-zinc-200 px-6 py-3 dark:border-zinc-700">
           <div className="flex-1 text-sm">
-            Dipilih:{" "}
+            {t.cleaner.selected}{" "}
             <span className="font-semibold tabular-nums">
-              {formatCount(selected.size)} item · {formatBytes(selectedBytes)}
+              {selectedItems} · {fmt.bytes(selectedBytes)}
             </span>
             {tooMany && (
               <span className="ml-2 text-red-600 dark:text-red-400">
-                Maksimal {formatCount(preview.maxItems)} item sekali jalan.
+                {t.cleaner.tooMany(fmt.count(preview.maxItems))}
               </span>
             )}
           </div>
@@ -224,27 +226,23 @@ export function Cleaner({ onBack }: Props) {
             onClick={() => setConfirming(true)}
             className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            Lanjut ke konfirmasi
+            {t.cleaner.next}
           </button>
         </footer>
       )}
 
       <ConfirmDialog
         open={confirming}
-        title="Pindahkan ke Recycle Bin?"
-        confirmLabel="Pindahkan ke Recycle Bin"
+        title={t.cleaner.confirmTitle}
+        confirmLabel={t.cleaner.confirmButton}
         busy={busy}
         onConfirm={() => void execute()}
         onCancel={() => setConfirming(false)}
       >
-        <p>
-          <strong>{formatCount(selected.size)} item</strong> dengan total{" "}
-          <strong>{formatBytes(selectedBytes)}</strong> akan dipindah ke Recycle Bin.
+        <p className="font-medium">
+          {t.cleaner.confirmLead(selectedItems, fmt.bytes(selectedBytes))}
         </p>
-        <p>
-          Item masih bisa dipulihkan dari Recycle Bin. Ruang disk baru kosong setelah Recycle Bin
-          dikosongkan. Item yang berubah sejak daftar ini dibuat akan dilewati.
-        </p>
+        <p>{t.cleaner.confirmNote}</p>
       </ConfirmDialog>
     </div>
   );

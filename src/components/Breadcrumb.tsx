@@ -1,3 +1,4 @@
+import { useI18n } from "../lib/i18n";
 import { ArrowUpIcon } from "./icons";
 
 export interface Crumb {
@@ -12,18 +13,19 @@ interface Props {
 }
 
 export function Breadcrumb({ trail, onNavigate }: Props) {
+  const { t } = useI18n();
   const last = trail.length - 1;
   return (
-    <nav aria-label="Lokasi folder" className="flex min-w-0 items-center gap-2">
+    <nav aria-label={t.breadcrumb.label} className="flex min-w-0 items-center gap-2">
       <button
         type="button"
         disabled={last === 0}
         onClick={() => onNavigate(last - 1)}
-        title="Naik satu folder (Backspace)"
+        title={t.breadcrumb.upHint}
         className="shrink-0 rounded-md border border-zinc-300 p-1.5 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
       >
         <ArrowUpIcon />
-        <span className="sr-only">Naik satu folder</span>
+        <span className="sr-only">{t.breadcrumb.up}</span>
       </button>
       <ol className="flex min-w-0 flex-wrap items-center text-sm">
         {trail.map((c, i) => (

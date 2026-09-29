@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { useI18n } from "../lib/i18n";
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export function ConfirmDialog({
             autoFocus
             className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:hover:bg-zinc-700"
           >
-            Batal
+            {t.common.cancel}
           </button>
           <button
             type="button"
@@ -68,7 +70,7 @@ export function ConfirmDialog({
             disabled={busy}
             className={`rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${confirmClass}`}
           >
-            {busy ? "Memproses…" : confirmLabel}
+            {busy ? t.common.processing : confirmLabel}
           </button>
         </div>
       </div>
