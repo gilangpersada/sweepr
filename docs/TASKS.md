@@ -68,7 +68,12 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - Preview nyata di PC pemilik (hanya baca): temp 422 item / 247 MB (53 ms), installer lama 28 item / 7,5 GB (2 ms), `node_modules` lama 0 item — project ada di Desktop yang terlindungi (lihat pertanyaan terbuka di DECISIONS).
 - Recycle Bin `C:` di PC pemilik: MaxCapacity ±48,6 GB, NukeOnDelete 0.
 - **Lanjutan M3 — grup "Cache Developer" (D-025):** rule punya field `group`; `node_modules project lama` kini juga mencari di Desktop dan Documents (disebut eksplisit), root bersarang tidak ditelusuri dua kali. `cargo test` 72 lulus. Preview nyata: penelusuran user folder + Desktop + Documents 468 ms; 0 item karena 2 project lama memakai pnpm dengan ±1.000 junction ke lokasi lama (dikecualikan, D-022); `node_modules` extension VS Code (`.vscode`) tidak disentuh.
-- **Cek manual `npm run tauri dev` di folder dummy belum dilakukan** — lihat daftar cek di ringkasan PR M3; isi hasilnya di sini.
+- Cek manual `npm run tauri dev` (2026-09-29, pemilik), folder dummy `Desktop\sweepr-dummy-project` (package.json + node_modules, tanggal dimundurkan 90 hari):
+  - Layar Pembersih tampil dengan bagian "Umum" dan "Cache Developer"; "node_modules project lama" tidak tercentang otomatis.
+  - `node_modules` dummy dipindah → ada di Recycle Bin dengan Original Location benar; `package.json` utuh; `cleanup.jsonl` mencatat 1 baris `"ok":true` (3.002 byte).
+  - Restore dari Recycle Bin berhasil, folder kembali ke project.
+  - Setelah Restore, project tidak muncul lagi di preview: Restore mengubah tanggal folder project, jadi project dianggap aktif (perilaku yang diharapkan, D-021).
+  - Hanya rule node_modules yang diuji lewat UI; file temp/installer dummy tidak dipindah (jalur yang sama sudah dicakup tes otomatis `real_cleanup_round_trip_in_dummy_folder`).
 
 ## M4 — Poles & rilis pribadi
 - [ ] Tema terang/gelap ikut sistem
@@ -78,3 +83,7 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - [ ] `npm run tauri build` menghasilkan installer Windows
 - [ ] Catatan hasil pemakaian 2 minggu → masukkan ke `DECISIONS.md`
 **Selesai jika:** semua checklist "Definition of Done — MVP" di `PRD.md` tercentang.
+
+**Masukan dari uji manual M3** (pertimbangkan saat mulai M4):
+- Daftar detail rule diurutkan dari yang terbesar; file kecil tertentu sulit ditemukan di antara ratusan item. Usulan: kolom cari/filter di daftar detail.
+- Rule node_modules menampilkan tanggal folder `node_modules`, padahal yang dinilai adalah tanggal `package.json` dan folder project. Usulan: tampilkan "project terakhir diubah".
