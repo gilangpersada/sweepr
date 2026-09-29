@@ -94,7 +94,8 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - Ikon: rubah menyapu dari pemilik, glow dibuang (`source-clean.png`), dibuat dengan `npm run tauri icon`.
 - Otomatis: `cargo test` 72 lulus, clippy, typecheck, lint, prettier bersih.
 - Build: `npm run tauri build` sukses; satu peringatan: identifier `com.sweepr.app` berakhiran `.app` (bentrok dengan bundle macOS, tidak berpengaruh di Windows — keputusan pemilik, D-010); installer 1,59 MB (target PRD < 30 MB), `sweepr.exe` 4,8 MB.
-- **Belum:** uji install/uninstall dan tampilan app hasil build di PC pemilik; catatan pemakaian 2 minggu (template di `DECISIONS.md`).
+- Uji install/uninstall (2026-09-29, pemilik): installer per mesin ke `C:\Program Files\Sweepr` (D-030, ikon installer rubah) — dilaporkan aman. Percobaan pertama gagal menulis ke `Program Files (x86)` karena folder tujuan diganti saat installer masih mode per pengguna; itu yang memicu D-030.
+- **Belum:** catatan pemakaian 2 minggu (template di `DECISIONS.md`).
 
 ## M5 — Redesign UI: menu, Neo-Brutalism, animasi (setelah MVP)
 Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism, animasi dengan `motion`, dan loading screen beranimasi. Tidak mengubah backend, perilaku scan, atau aturan keamanan pembersih. Boleh dikerjakan selama masa pemakaian 2 minggu M4; catatan pemakaian tetap diisi. Keputusan: D-031 s/d D-035 (lihat juga "Pertanyaan terbuka untuk M5" di `DECISIONS.md`).
@@ -103,7 +104,7 @@ Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism,
 - [x] Jawab pertanyaan terbuka M5 di `DECISIONS.md` (font, palet warna, toggle tema, lebar sidebar) — dijawab 2026-09-29: D-031, D-033 s/d D-035
 - [ ] Tambah dependency `motion` (D-032); pakai `LazyMotion` + `m` supaya bundle kecil
 - [ ] Design token Neo-Brutalism di `src/index.css` (`@theme` Tailwind v4): warna, border tebal, bayangan keras, radius, font; versi terang dan gelap (D-031)
-- [ ] Font lokal Space Grotesk + JetBrains Mono (`.woff2` + lisensi OFL di `src/assets/fonts/`, D-031); tanpa jaringan (CSP D-009)
+- [x] Font lokal Space Grotesk + JetBrains Mono (`.woff2` + lisensi OFL di `src/assets/fonts/`, D-031); tanpa jaringan (CSP D-009) — variable font latin + latin-ext dari Fontsource 5.3.0 (±97 KB total), sumber dan `unicode-range` di `src/assets/fonts/README.md`
 - [ ] Komponen dasar di `src/components/ui/`: `Button` (primary/secondary/danger), `Card`, `Badge`, `Tabs`, `Checkbox`, `Input`, `ProgressBar`, `Dialog`; komponen lama beralih memakainya
 
 **Menu & pemisahan fitur**
@@ -131,7 +132,7 @@ Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism,
 
 **Loading screen**
 - [ ] Splash statis di `index.html` (CSS inline, tampil sebelum JavaScript dimuat) supaya tidak ada layar kosong/putih
-- [ ] Logo SVG rubah menyapu (D-035): digambar ulang dari `source-clean.png`, sapu/ekor/debu jadi grup terpisah; tampilannya disetujui pemilik sebelum dianimasikan
+- [ ] Logo SVG rubah menyapu (D-035): digambar ulang dari `source-clean.png`, sapu/ekor/debu jadi grup terpisah; tampilannya disetujui pemilik sebelum dianimasikan — draf: `src/assets/logo-fox.svg` (outline gelap tebal gaya Neo-Brutalism; grup `#tail`, `#head`, `#broom`, `#dust`), menunggu persetujuan
 - [ ] React mengambil alih dengan animasi: sapu bergerak menyapu, debu beterbangan, nama app + indikator muat
 - [ ] Splash hilang (animasi keluar) setelah data awal siap (`list_drives`); tampil minimal ±600 ms supaya tidak berkedip, tanpa jeda buatan lain
 - [ ] Bila data awal gagal: splash berganti ke `ErrorState` dengan "Coba lagi", bukan macet
