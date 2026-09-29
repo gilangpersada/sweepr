@@ -180,9 +180,13 @@ export interface CleanerError {
 
 export type Risk = "low" | "medium";
 
+/** Section of the cleaner screen. */
+export type RuleGroup = "general" | "developer";
+
 export interface RuleInfo {
   id: string;
   name: string;
+  group: RuleGroup;
   description: string;
   risk: Risk;
   defaultChecked: boolean;

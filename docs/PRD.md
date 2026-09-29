@@ -74,7 +74,7 @@ Daftar 50 file terbesar dari hasil scan, dengan aksi "Buka di Explorer".
 Kategori awal (lihat `config/cleaner-rules.windows.json`):
 1. **File sementara pengguna** (`%TEMP%`), hanya file yang lebih tua dari N hari.
 2. **Installer lama di Downloads** (`.exe`, `.msi`, `.zip`, `.iso`) lebih tua dari 30 hari.
-3. **`node_modules` lama** yang ditemukan saat scan, di project yang tidak diubah > 60 hari.
+3. **`node_modules` project lama** (grup "Cache Developer"), dicari di folder pengguna, Desktop, dan Documents, di project yang tidak diubah > 60 hari (D-021, D-025).
 4. **Cache browser** dibiarkan di luar MVP (risiko login/sesi), masuk roadmap.
 
 Alur wajib:
@@ -119,10 +119,13 @@ node_modules... ...
 
 **Layar 3 — Pembersih** (dibuka dari Beranda atau header hasil scan)
 ```
-[x] File sementara      2.3 GB   Risiko: Rendah   [Lihat detail]
-[x] Installer lama      4.1 GB   Risiko: Rendah   [Lihat detail]
-[ ] node_modules lama   9.8 GB   Risiko: Sedang   [Lihat detail]
-Total dipilih: 6.4 GB            [Lanjut ke konfirmasi]
+Recycle Bin: 1.2 GB (40 item)                  [Kosongkan Recycle Bin…]
+UMUM
+[x] File sementara             2.3 GB   Risiko: Rendah   [Lihat detail]
+[x] Installer lama             4.1 GB   Risiko: Rendah   [Lihat detail]
+CACHE DEVELOPER
+[ ] node_modules project lama  9.8 GB   Risiko: Sedang   [Lihat detail]
+Total dipilih: 6.4 GB                   [Lanjut ke konfirmasi]
 ```
 
 ## 10. Risiko

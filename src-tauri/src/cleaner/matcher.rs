@@ -1,6 +1,7 @@
 //! Finds what a rule would clean. Never follows links, never enters protected folders, and
 //! re-checks the same conditions right before execution (`recheck`).
 
+use std::collections::HashSet;
 use std::fs::{self, Metadata};
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
@@ -47,9 +48,15 @@ pub struct Found {
 pub fn find(matcher: &Match, roots: &[PathBuf], policy: &SafetyPolicy, now: i64) -> Found {
     let mut found = Found::default();
     for root in roots {
+        // Another root nested inside this one (e.g. Desktop inside the user folder) is walked
+        // on its own, so do not enter it from here.
+        let others: Vec<&PathBuf> = roots
+            .iter()
+            .filter(|r| !platform::path_eq(r, root))
+            .collect();
         match matcher {
             Match::FilesInRoot { recursive, .. } => {
-                found.unreadable += walk(root, policy, roots, *recursive, |path, meta| {
+                found.unreadable += walk(root, policy, roots, &others, *recursive, |path, meta| {
                     if let Some(fp) = check(matcher, path, meta, now) {
                         found.candidates.push(Candidate {
                             path: path.to_path_buf(),
@@ -64,7 +71,7 @@ pub fn find(matcher: &Match, roots: &[PathBuf], policy: &SafetyPolicy, now: i64)
             }
             Match::NamedDirectory { directory_name, .. } => {
                 let mut matches = Vec::new();
-                found.unreadable += walk(root, policy, roots, true, |path, meta| {
+                found.unreadable += walk(root, policy, roots, &others, true, |path, meta| {
                     if !meta.is_dir() {
                         return false;
                     }
@@ -97,6 +104,9 @@ pub fn find(matcher: &Match, roots: &[PathBuf], policy: &SafetyPolicy, now: i64)
             }
         }
     }
+    // Safety net for roots listed twice: never offer the same path twice.
+    let mut seen = HashSet::new();
+    found.candidates.retain(|c| seen.insert(c.path.clone()));
     found
 }
 
@@ -162,6 +172,7 @@ fn walk(
     root: &Path,
     policy: &SafetyPolicy,
     roots: &[PathBuf],
+    skip: &[&PathBuf],
     recursive: bool,
     mut visit: impl FnMut(&Path, &Metadata) -> bool,
 ) -> usize {
@@ -183,7 +194,13 @@ fn walk(
             }
             let path = entry.path();
             let descend = visit(&path, &meta);
-            if meta.is_dir() && recursive && descend && policy.may_descend(&path, roots) {
+            let other_root = skip.iter().any(|r| platform::path_eq(r, &path));
+            if meta.is_dir()
+                && recursive
+                && descend
+                && !other_root
+                && policy.may_descend(&path, roots)
+            {
                 stack.push(path);
             }
         }

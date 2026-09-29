@@ -23,7 +23,7 @@ use crate::platform::{self, RecycleLimit};
 use crate::safety::SafetyPolicy;
 use log::{ActionLog, LogEntry, LogWriter};
 use rules::Rule;
-pub use rules::{Risk, RuleError};
+pub use rules::{Group, Risk, RuleError};
 
 /// Most items a single execution may touch (SAFETY_RULES), also the cap per rule in a
 /// preview.
@@ -102,6 +102,7 @@ impl Serialize for CleanerError {
 pub struct RuleInfo {
     pub id: String,
     pub name: String,
+    pub group: Group,
     pub description: String,
     pub risk: Risk,
     pub default_checked: bool,
@@ -524,6 +525,7 @@ fn rule_info(rule: &Rule) -> RuleInfo {
     RuleInfo {
         id: rule.id.clone(),
         name: rule.name.clone(),
+        group: rule.group,
         description: rule.description.clone(),
         risk: rule.risk,
         default_checked: rule.default_checked,

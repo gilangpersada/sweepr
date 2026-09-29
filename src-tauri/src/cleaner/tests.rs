@@ -52,12 +52,18 @@ impl Trasher for FakeTrasher {
 const RULES: &str = r#"{
     "schema_version": 1, "os": "test",
     "rules": [
-        { "id": "temp", "name": "Temp", "description": "d", "risk": "low",
+        { "id": "temp", "name": "Temp", "group": "general", "description": "d", "risk": "low",
           "default_checked": true, "allowed_roots": ["%TESTROOT%/temp"],
           "match": { "type": "files_in_root", "recursive": true, "min_age_days": 3 },
           "action": "trash" },
-        { "id": "nm", "name": "node_modules", "description": "d", "risk": "medium",
+        { "id": "nm", "name": "node_modules", "group": "developer", "description": "d", "risk": "medium",
           "default_checked": false, "allowed_roots": ["%TESTROOT%/home", "%TESTROOT%/missing"],
+          "match": { "type": "named_directory", "directory_name": "node_modules",
+                     "project_marker_file": "package.json", "min_age_days": 60 },
+          "action": "trash" },
+        { "id": "nm-docs", "name": "node_modules + Documents", "group": "developer",
+          "description": "d", "risk": "medium", "default_checked": false,
+          "allowed_roots": ["%TESTROOT%/home", "%TESTROOT%/home/Documents"],
           "match": { "type": "named_directory", "directory_name": "node_modules",
                      "project_marker_file": "package.json", "min_age_days": 60 },
           "action": "trash" }
@@ -480,4 +486,28 @@ fn real_cleanup_round_trip_in_dummy_folder() {
     }
     assert!(file.exists(), "restored to its original place");
     assert_eq!(fs::metadata(&file).unwrap().len(), 1234);
+}
+
+#[test]
+fn explicitly_named_protected_folder_is_searched_once_but_never_offered_itself() {
+    let e = env();
+    let p = e.cleaner.preview(&["nm-docs".into()]).unwrap();
+    let mut paths: Vec<_> = p.rules[0]
+        .items
+        .iter()
+        .map(|i| i.path.replace('\\', "/"))
+        .collect();
+    paths.sort();
+    // home/proj via the user folder, home/Documents/p2 because the rule names Documents;
+    // each exactly once although Documents is inside the home root.
+    assert_eq!(paths.len(), 2, "{paths:?}");
+    assert!(paths[0].ends_with("home/Documents/p2/node_modules"));
+    assert!(paths[1].ends_with("home/proj/node_modules"));
+    assert!(p.rules[0].root_problems.is_empty());
+
+    let r = e.cleaner.execute(p.preview_id, &ids(&p)).unwrap();
+    assert_eq!(r.trashed_count, 2);
+    // The protected folder and the projects stay; only node_modules went.
+    assert!(e.base.join("home/Documents/p2/package.json").exists());
+    assert!(e.base.join("home/Documents").is_dir());
 }
