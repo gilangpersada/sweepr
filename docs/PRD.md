@@ -96,6 +96,7 @@ Semua ketentuan di `SAFETY_RULES.md` berlaku. Jika ada konflik, SAFETY_RULES men
 - App tidak butuh hak admin di MVP (installer butuh admin karena memasang ke Program Files, D-030).
 - Teks UI dalam Bahasa Indonesia dan Inggris (ikut bahasa Windows, bisa diganti di Beranda); semua teks di satu kamus per bahasa (D-026).
 - Tema terang/gelap mengikuti sistem.
+- Animasi (sejak M5, D-032) mengikuti pengaturan "Animation effects" Windows (reduced motion) dan tidak boleh membuat UI tersendat atau menunda dialog konfirmasi.
 
 ## 9. Layar (wireframe teks)
 
@@ -117,7 +118,21 @@ node_modules... ...
 [Tab: Folder | File Terbesar]        [Pembersih]  ← layar sendiri (D-023)
 ```
 
-**Layar 3 — Pembersih** (dibuka dari Beranda atau header hasil scan)
+**Tata letak M5 (rencana, D-031 s/d D-033)** — Layar 1–3 menjadi isi menu; gaya Neo-Brutalism.
+```
++--------------+------------------------------------------+
+| SWEEPR       |  (isi menu yang dipilih)                 |
+| > Beranda    |                                          |
+|   Hasil Scan |                                          |
+|   Pembersih  |                                          |
+|   Recycle Bin|                                          |
+|   Pengaturan |                                          |
+| [scan 42%..] |  <- progress scan terlihat dari mana pun |
++--------------+------------------------------------------+
+```
+Saat app dibuka: loading screen (logo rubah beranimasi) sampai daftar drive siap.
+
+**Layar 3 — Pembersih** (dibuka dari Beranda atau header hasil scan; di M5 dari menu)
 ```
 Recycle Bin: 1.2 GB (40 item)                  [Kosongkan Recycle Bin…]
 UMUM

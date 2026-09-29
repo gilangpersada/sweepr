@@ -10,6 +10,7 @@ Owner is a solo developer (Indonesian speaker, comfortable with JavaScript/TypeS
 - Tauri 2 (Rust backend) + React + TypeScript + Vite frontend
 - Rust crates (propose before adding others): `jwalk` or `walkdir` (traversal), `rayon`, `serde`/`serde_json`, `sysinfo` (drive info), `trash` (send to Recycle Bin/Trash), `dirs` (known folders), `thiserror`, `tracing`, `windows-sys` (Windows only: Recycle Bin, volume/registry, D-018)
 - Frontend: React + TS + Tailwind CSS v4 (decided, D-007), no heavy UI kits in MVP
+- Animations: `motion` (M5, D-032); Neo-Brutalism design tokens in `src/index.css` (D-031)
 - Toolchain: Node >= 22.12 (24 LTS used), Rust stable (MSVC) — see D-008
 
 ## Platform policy

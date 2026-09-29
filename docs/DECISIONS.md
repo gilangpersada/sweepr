@@ -33,6 +33,9 @@
 | D-028 | Ikon app: rubah menyapu (gaya flat, latar transparan) dari pemilik. Sumber `src-tauri/icons/source.png`; `source-clean.png` = versi tanpa glow (piksel alpha < 200 dibuang) yang dipakai `npm run tauri icon` | Glow semi-transparan membuat ikon buram di taskbar gelap. Folder ikon android/ios tidak disimpan |
 | D-029 | Tema: selain kelas `dark:` Tailwind, `color-scheme: light dark` di `:root` supaya scrollbar, checkbox, `<select>`, `<dialog>` ikut tema Windows; latar `html/body` diset agar tidak berkedip putih | Melengkapi D-007 |
 | D-030 | Installer `installMode: perMachine` → `C:\Program Files\Sweepr` (app 64-bit, jadi bukan `Program Files (x86)`); install/uninstall butuh admin (UAC). App tetap berjalan sebagai pengguna biasa, data/log tetap per pengguna di AppData. Ikon installer = ikon app (`nsis.installerIcon`) | Diminta pemilik saat uji install M4 (ingin app di Program Files). Menggantikan bagian mode install D-027; PRD "tanpa admin" kini berlaku untuk app, bukan installer |
+| D-031 | Gaya visual Neo-Brutalism (M5): border tebal gelap, bayangan keras tanpa blur (offset), warna aksen jenuh, radius kecil, tipografi tebal. Semua nilai jadi design token di `@theme` (`src/index.css`), ada versi terang dan gelap; tetap Tailwind, tanpa UI kit. Font disimpan lokal di repo | Diminta pemilik. Token satu tempat supaya komponen konsisten; tanpa jaringan (aturan keras #6, CSP D-009). Detail palet/font: lihat pertanyaan terbuka M5 |
+| D-032 | Dependency `motion` (paket npm `motion`, dulu Framer Motion) untuk animasi, dengan `LazyMotion` + `m` dan `MotionConfig reducedMotion="user"` | Diminta pemilik; animasi deklaratif untuk React (transisi halaman, dialog keluar-masuk, stagger) yang sulit dengan CSS saja; lokal, tanpa jaringan. Catat ukuran bundle sebelum/sesudah |
+| D-033 | Navigasi pakai sidebar menu: Beranda, Hasil Scan, Pembersih, Recycle Bin, Pengaturan. Recycle Bin dipisah dari layar Pembersih; pilihan bahasa pindah ke Pengaturan. Tetap state React biasa (tanpa router/library state); view yang sudah dibuka tetap ter-mount supaya hasil scan dan posisi folder tidak hilang | Diminta pemilik ("pisahkan antar fitur"). Melanjutkan D-023; tanpa `react-router` karena hanya 5 halaman tanpa URL |
 
 ## Pertanyaan terbuka
 - **Ketersediaan nama "Sweepr"** (D-010): cek merek dagang, domain, crates.io/npm sebelum rilis publik.
@@ -42,6 +45,14 @@
 
 ## Pertanyaan terbuka untuk M2
 Sudah diputuskan di awal M2: lihat D-014 s/d D-017.
+
+## Pertanyaan terbuka untuk M5
+Jawab di awal M5 sebelum menulis kode; hasilnya dicatat sebagai keputusan baru atau melengkapi D-031/D-033.
+- **Font:** usulan Space Grotesk (judul + teks) dan JetBrains Mono (angka/path), keduanya lisensi OFL, file `.woff2` disimpan di repo. Atau cukup font sistem (Segoe UI) supaya tanpa file tambahan?
+- **Palet aksen:** usulan kuning (primary), pink/merah (danger), biru/hijau (info/sukses) di atas latar krem (terang) / hampir hitam (gelap). Ada warna merek yang diinginkan (mis. oranye dari ikon rubah)?
+- **Toggle tema manual** di Pengaturan (Terang / Gelap / Ikut sistem), atau tetap hanya ikut sistem?
+- **Sidebar:** selalu lebar (ikon + teks), atau bisa diciutkan manual?
+- **Logo animasi di loading screen:** pakai `source-clean.png` yang ada (animasi gerak/goyang), atau perlu versi SVG supaya bagian sapu bisa dianimasikan terpisah?
 
 ## Catatan pemakaian 2 minggu (M4)
 Isi setelah memakai build installer di PC sendiri selama ±2 minggu (mulai: ____, selesai: ____). Tulis singkat; jadi dasar memilih v0.2 (lihat ROADMAP).

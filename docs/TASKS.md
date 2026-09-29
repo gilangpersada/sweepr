@@ -95,3 +95,49 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - Otomatis: `cargo test` 72 lulus, clippy, typecheck, lint, prettier bersih.
 - Build: `npm run tauri build` sukses; satu peringatan: identifier `com.sweepr.app` berakhiran `.app` (bentrok dengan bundle macOS, tidak berpengaruh di Windows — keputusan pemilik, D-010); installer 1,59 MB (target PRD < 30 MB), `sweepr.exe` 4,8 MB.
 - **Belum:** uji install/uninstall dan tampilan app hasil build di PC pemilik; catatan pemakaian 2 minggu (template di `DECISIONS.md`).
+
+## M5 — Redesign UI: menu, Neo-Brutalism, animasi (setelah MVP)
+Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism, animasi dengan `motion`, dan loading screen beranimasi. Tidak mengubah backend, perilaku scan, atau aturan keamanan pembersih. Boleh dikerjakan selama masa pemakaian 2 minggu M4; catatan pemakaian tetap diisi. Keputusan: D-031 s/d D-033 (lihat juga "Pertanyaan terbuka untuk M5" di `DECISIONS.md`).
+
+**Persiapan**
+- [ ] Jawab pertanyaan terbuka M5 di `DECISIONS.md` (font, palet warna, toggle tema, lebar sidebar)
+- [ ] Tambah dependency `motion` (D-032); pakai `LazyMotion` + `m` supaya bundle kecil
+- [ ] Design token Neo-Brutalism di `src/index.css` (`@theme` Tailwind v4): warna, border tebal, bayangan keras, radius, font; versi terang dan gelap (D-031)
+- [ ] Font disimpan lokal di repo (tanpa jaringan, sesuai CSP D-009), lisensi dicatat
+- [ ] Komponen dasar di `src/components/ui/`: `Button` (primary/secondary/danger), `Card`, `Badge`, `Tabs`, `Checkbox`, `Input`, `ProgressBar`, `Dialog`; komponen lama beralih memakainya
+
+**Menu & pemisahan fitur**
+- [ ] `AppShell`: sidebar menu di kiri + area konten; sidebar menciut jadi ikon di jendela sempit (min. lebar 800 px)
+- [ ] Menu (D-033): **Beranda** (drive + pilih folder), **Hasil Scan** (aktif setelah scan; tab Folder / File Terbesar / Kategori), **Pembersih**, **Recycle Bin** (dipisah dari layar Pembersih), **Pengaturan** (bahasa, info versi)
+- [ ] Pindah menu tidak menghapus hasil scan atau posisi folder; progress scan yang sedang jalan terlihat dari menu mana pun (indikator di sidebar)
+- [ ] Pilihan bahasa pindah dari Beranda ke Pengaturan
+- [ ] Navigasi keyboard: menu bisa dipakai dengan Tab/Enter, fokus selalu terlihat
+
+**Tema Neo-Brutalism**
+- [ ] Terapkan ke semua layar: Beranda, Hasil Scan (tabel, breadcrumb, kategori, file terbesar), Pembersih, Recycle Bin, Pengaturan, semua dialog, state kosong/error/loading
+- [ ] Tema terang dan gelap tetap ikut Windows (D-007, D-029)
+- [ ] Kontras teks minimal WCAG AA di kedua tema
+- [ ] Aksi berbahaya (Pindahkan ke Recycle Bin, Kosongkan Recycle Bin) tetap paling jelas dibedakan (warna danger + ikon + teks), sesuai SAFETY_RULES
+
+**Animasi (`motion`)**
+- [ ] `MotionConfig reducedMotion="user"`: bila Windows mengatur "Animation effects" mati, animasi gerak dimatikan
+- [ ] Transisi antar menu/halaman (fade + geser pendek, ≤ 250 ms)
+- [ ] Umpan balik tombol dan kartu: hover/tekan menggeser bayangan keras
+- [ ] Dialog muncul/hilang; kartu drive dan kartu rule muncul bertahap (stagger)
+- [ ] Progress scan dan bar pemakaian drive beranimasi halus; total ukuran hasil scan/pembersihan naik bertahap (count-up)
+- [ ] **Tidak** menganimasikan baris `VirtualList` satu per satu (kinerja tabel ±1 juta node); target PRD "tidak freeze > 200 ms" tetap berlaku
+- [ ] Animasi tidak pernah menunda atau menyembunyikan isi dialog konfirmasi hapus (tombol langsung bisa dibaca dan dipakai)
+
+**Loading screen**
+- [ ] Splash statis di `index.html` (CSS inline, tampil sebelum JavaScript dimuat) supaya tidak ada layar kosong/putih
+- [ ] React mengambil alih dengan animasi: logo rubah menyapu + nama app + indikator muat
+- [ ] Splash hilang (animasi keluar) setelah data awal siap (`list_drives`); tampil minimal ±600 ms supaya tidak berkedip, tanpa jeda buatan lain
+- [ ] Bila data awal gagal: splash berganti ke `ErrorState` dengan "Coba lagi", bukan macet
+- [ ] Dengan reduced motion: logo statis, hanya fade
+
+**Penutup**
+- [ ] Semua teks baru lewat i18n (`id.ts` + `en.ts`); tidak ada teks tertanam (cek grep seperti M4)
+- [ ] Perbarui wireframe di `PRD.md` §9 dan bagian Frontend di `ARCHITECTURE.md`
+- [ ] `npm run tauri build` sukses; catat ukuran installer dan bundle JS (sebelum/sesudah `motion`)
+
+**Selesai jika:** semua fitur bisa dibuka dari menu tanpa kehilangan hasil scan; semua layar memakai gaya Neo-Brutalism di tema terang dan gelap; animasi berjalan dan mati saat reduced motion aktif; loading screen tampil saat app dibuka; `typecheck`, `lint`, `prettier`, `cargo test`, `clippy` bersih; cek manual di Windows dicatat di sini.

@@ -6,6 +6,7 @@ Urutan ini usulan, bukan janji. Ubah sesuai apa yang benar-benar terpakai.
 
 | Versi | Fitur | Catatan |
 |---|---|---|
+| v0.1.x | **Redesign UI (M5)** | Menu sidebar per fitur, gaya Neo-Brutalism, animasi `motion`, loading screen. Lihat `TASKS.md` M5, D-031 s/d D-033. |
 | v0.2 | **Treemap / sunburst** | Visual kotak berwarna; klik untuk masuk folder. Pakai canvas/SVG dari data `get_children`. |
 | v0.2 | **Rescan cepat** | Scan ulang hanya subfolder yang dipilih. |
 | v0.3 | **Deteksi file duplikat** | Kelompokkan berdasarkan ukuran → hash sebagian → hash penuh (BLAKE3). Pilih mana yang dipertahankan. |
