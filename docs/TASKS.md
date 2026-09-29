@@ -80,7 +80,7 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - [x] Teks UI dipusatkan (i18n sederhana) — Bahasa Indonesia + Inggris (D-026)
 - [x] Pesan error yang ramah, state kosong, state loading
 - [x] Ikon & nama final app
-- [x] `npm run tauri build` menghasilkan installer Windows — `Sweepr_0.1.0_x64-setup.exe` 1,59 MB (NSIS, per pengguna)
+- [x] `npm run tauri build` menghasilkan installer Windows — `Sweepr_0.1.0_x64-setup.exe` 1,59 MB (NSIS; sejak D-030 per mesin ke Program Files)
 - [ ] Catatan hasil pemakaian 2 minggu → masukkan ke `DECISIONS.md`
 **Selesai jika:** semua checklist "Definition of Done — MVP" di `PRD.md` tercentang.
 

@@ -93,7 +93,7 @@ Semua ketentuan di `SAFETY_RULES.md` berlaku. Jika ada konflik, SAFETY_RULES men
 ## 8. Requirement non-fungsional
 - Lokal penuh: tanpa jaringan, telemetri, atau akun.
 - Instalasi ringan (target < 30 MB installer).
-- Tidak butuh hak admin di MVP.
+- App tidak butuh hak admin di MVP (installer butuh admin karena memasang ke Program Files, D-030).
 - Teks UI dalam Bahasa Indonesia dan Inggris (ikut bahasa Windows, bisa diganti di Beranda); semua teks di satu kamus per bahasa (D-026).
 - Tema terang/gelap mengikuti sistem.
 

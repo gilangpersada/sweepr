@@ -30,7 +30,7 @@
     "shortDescription": "Disk space analyzer and safe cleaner",
     "windows": {
       "nsis": {
-        "installMode": "currentUser",
+        "installMode": "perMachine",
         "installerIcon": "icons/icon.ico"
       }
     },
