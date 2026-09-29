@@ -132,7 +132,7 @@ Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism,
 
 **Loading screen**
 - [ ] Splash statis di `index.html` (CSS inline, tampil sebelum JavaScript dimuat) supaya tidak ada layar kosong/putih
-- [ ] Logo SVG rubah menyapu (D-035): digambar ulang dari `source-clean.png`, sapu/ekor/debu jadi grup terpisah; tampilannya disetujui pemilik sebelum dianimasikan — draf: `src/assets/logo-fox.svg` (outline gelap tebal gaya Neo-Brutalism; grup `#tail`, `#head`, `#broom`, `#dust`), menunggu persetujuan
+- [ ] Logo SVG rubah menyapu (D-035): digambar ulang dari `source-clean.png`, sapu/ekor/debu jadi grup terpisah; tampilannya disetujui pemilik sebelum dianimasikan — dibuat pemilik (draf pertama dari Claude ditolak, 2026-09-29)
 - [ ] React mengambil alih dengan animasi: sapu bergerak menyapu, debu beterbangan, nama app + indikator muat
 - [ ] Splash hilang (animasi keluar) setelah data awal siap (`list_drives`); tampil minimal ±600 ms supaya tidak berkedip, tanpa jeda buatan lain
 - [ ] Bila data awal gagal: splash berganti ke `ErrorState` dengan "Coba lagi", bukan macet
