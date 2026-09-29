@@ -46,7 +46,7 @@ Kerjakan **satu milestone per sesi**. Centang tugas setelah selesai dan kriteria
 - Command baru: `get_category_summary`, `get_node_path`, `reveal_in_explorer` (menerima `node_id`, bukan path).
 - Tabel folder memakai virtual list untuk semua ukuran (bukan hanya > 500 baris): lebih sederhana, satu jalur kode.
 - Tab "File Terbesar" menampilkan 1000 file terbesar di seluruh hasil scan (bukan per folder).
-- **Cek manual `npm run tauri dev` belum dilakukan** — lihat daftar cek di ringkasan PR M2; isi hasilnya di sini.
+- Cek manual `npm run tauri dev` (2026-09-29, pemilik): hasil sementara oke (scan, telusuri folder, file terbesar). Rincian per poin daftar cek belum dicatat; tambahkan di sini bila ada temuan.
 
 ## M3 — Pembersih aman
 - [ ] `safety.rs` lengkap dengan denylist + tes (lihat SAFETY_RULES)
