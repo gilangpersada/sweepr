@@ -118,7 +118,7 @@ node_modules... ...
 [Tab: Folder | File Terbesar]        [Pembersih]  ← layar sendiri (D-023)
 ```
 
-**Tata letak M5 (rencana, D-031 s/d D-035)** — Layar 1–3 menjadi isi menu; gaya Neo-Brutalism.
+**Tata letak M5 (rencana, D-031 s/d D-036)** — Layar 1–3 menjadi isi menu; gaya Neo-Brutalism.
 ```
 +--------------+------------------------------------------+
 | SWEEPR       |  (isi menu yang dipilih)                 |
@@ -130,7 +130,7 @@ node_modules... ...
 | [scan 42%..] |  <- progress scan terlihat dari mana pun |
 +--------------+------------------------------------------+
 ```
-Saat app dibuka: loading screen (logo rubah beranimasi) sampai daftar drive siap.
+Saat app dibuka: loading screen (wordmark "SWEEPR" dalam ubin + balok penyapu beranimasi, D-036) sampai daftar drive siap.
 
 **Layar 3 — Pembersih** (dibuka dari Beranda atau header hasil scan; di M5 dari menu)
 ```
