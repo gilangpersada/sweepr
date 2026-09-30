@@ -213,7 +213,6 @@ impl ScanTree {
                         .path(id)
                         .map(|p| p.to_string_lossy().into_owned())
                         .unwrap_or_default(),
-                    openable: None,
                 }
             })
             .collect()
@@ -320,7 +319,6 @@ impl ScanTree {
                     .path(c)
                     .map(|p| p.to_string_lossy().into_owned())
                     .unwrap_or_default(),
-                openable: None,
             })
             .collect();
         Ok(FilesPage {
@@ -412,10 +410,6 @@ pub struct FileView {
     #[serde(flatten)]
     pub node: NodeView,
     pub path: String,
-    /// Whether "Open file" is offered (not an executable, D-040). Set where the category
-    /// table is known; left out otherwise.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub openable: Option<bool>,
 }
 
 #[cfg(test)]

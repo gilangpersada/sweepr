@@ -135,31 +135,14 @@ pub async fn get_category_files(
         .categories
         .id_of(&category)
         .ok_or(ScanError::UnknownCategory(category))?;
-    let mut page = result.tree.category_files(
+    result.tree.category_files(
         NodeId(node_id),
         id,
         sort_by,
         order,
         offset,
         limit.min(MAX_PAGE),
-    )?;
-    for f in &mut page.items {
-        f.openable = Some(!result.categories.is_executable(f.node.name.as_ref()));
-    }
-    Ok(page)
-}
-
-/// Opens a scanned file with its default app. Takes a node id, never a path. Files that
-/// would run a program (`executable_extensions` in the config) are refused (D-040).
-#[tauri::command]
-pub async fn open_file(
-    sessions: State<'_, ScanSessions>,
-    scan_id: ScanId,
-    node_id: u32,
-) -> Result<(), ScanError> {
-    let result = sessions.result(scan_id)?;
-    let path = result.openable_path(NodeId(node_id))?;
-    platform::open_file(&path).map_err(|e| ScanError::from_io(path, e))
+    )
 }
 
 /// Full path of a node, for "copy path". Display only; never accepted back as input.

@@ -7,7 +7,7 @@ import { RuleCard } from "../components/RuleCard";
 import { EmptyState, ErrorState, LoadingState } from "../components/states";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { SECTION_TITLE } from "../components/ui/styles";
+import { PAGE_BODY, SECTION_TITLE } from "../components/ui/styles";
 import {
   executeCleanup,
   listCleanerRules,
@@ -140,7 +140,7 @@ export function Cleaner() {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
+        <div className={PAGE_BODY}>
           {notice && (
             <Card tone="primary" shadow="sm" role="alert" className="p-3 text-sm font-medium">
               {notice}
@@ -184,31 +184,33 @@ export function Cleaner() {
                 </section>
               );
             })}
+
+          {/* Floats at the bottom while scrolling and settles under the last card; same
+              width as the list so it reads as part of it. */}
+          {preview && !nothingFound && (
+            <Card className="sticky bottom-4 z-10 flex flex-wrap items-center gap-4 px-5 py-3">
+              <div className="flex-1 text-sm">
+                {t.cleaner.selected}{" "}
+                <span className="font-mono font-bold">
+                  {selectedItems} · {fmt.bytes(selectedBytes)}
+                </span>
+                {tooMany && (
+                  <span className="ml-2 font-bold text-danger-ink">
+                    {t.cleaner.tooMany(fmt.count(preview.maxItems))}
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="primary"
+                disabled={selected.size === 0 || tooMany || busy}
+                onClick={() => setConfirming(true)}
+              >
+                {t.cleaner.next}
+              </Button>
+            </Card>
+          )}
         </div>
       </div>
-
-      {preview && (
-        <footer className="flex flex-wrap items-center gap-4 border-t-[3px] border-line bg-surface px-6 py-3">
-          <div className="flex-1 text-sm">
-            {t.cleaner.selected}{" "}
-            <span className="font-mono font-bold">
-              {selectedItems} · {fmt.bytes(selectedBytes)}
-            </span>
-            {tooMany && (
-              <span className="ml-2 font-bold text-danger-ink">
-                {t.cleaner.tooMany(fmt.count(preview.maxItems))}
-              </span>
-            )}
-          </div>
-          <Button
-            variant="primary"
-            disabled={selected.size === 0 || tooMany || busy}
-            onClick={() => setConfirming(true)}
-          >
-            {t.cleaner.next}
-          </Button>
-        </footer>
-      )}
 
       <ConfirmDialog
         open={confirming}

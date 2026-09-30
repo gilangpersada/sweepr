@@ -48,6 +48,13 @@ export const en: Messages = {
   },
 
   home: {
+    /** By local hour: morning 04–11, afternoon 12–17, evening 18–03. */
+    greeting: (hour: number) =>
+      hour >= 4 && hour < 12
+        ? "Good morning"
+        : hour >= 12 && hour < 18
+          ? "Good afternoon"
+          : "Good evening",
     tagline: "See what is using your disk space, then clean it up safely.",
     now: "Right now",
     fullestDrive: "Fullest drive",
@@ -73,9 +80,9 @@ export const en: Messages = {
     estimate: (size: string) => `About ${size} can be cleaned`,
     estimating: "Calculating…",
     estimateNone: "Nothing needs cleaning right now.",
-    step4Title: "Empty",
+    step4Title: "Recycle Bin",
     step4Text: (size: string) =>
-      `The Recycle Bin still takes ${size}. Emptying it deletes permanently and cannot be undone.`,
+      `Still takes ${size}. Restore what you still need, then empty it. Emptying deletes permanently.`,
     step4Empty: "The Recycle Bin is already empty.",
     step4Button: "Open Recycle Bin",
     safety:
@@ -172,8 +179,6 @@ export const en: Messages = {
   },
 
   actions: {
-    open: "Open file",
-    openBlocked: "This file runs a program, so it can only be shown in Explorer.",
     reveal: "Show in Explorer",
     copyPath: "Copy path",
     copied: "Path copied",
@@ -316,8 +321,6 @@ export const en: Messages = {
     unknownScan: "This scan result is no longer valid. Please scan again.",
     unknownNode: "The item was not found in the scan result.",
     unknownCategory: "Unknown category.",
-    notAFile: "Only files can be opened.",
-    executable: "This file runs a program, so Sweepr does not open it. Use “Show in Explorer”.",
     rulesInvalid: "The cleaner rules are broken, so the cleaner is turned off. Please report this.",
     unknownRule: "Unknown cleaner rule.",
     unknownPreview: "This list is no longer valid. Reload it.",

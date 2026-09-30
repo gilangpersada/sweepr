@@ -47,7 +47,6 @@ pub fn run() {
             commands::get_largest_files,
             commands::get_category_summary,
             commands::get_category_files,
-            commands::open_file,
             commands::get_node_path,
             commands::get_skipped,
             commands::reveal_in_explorer,

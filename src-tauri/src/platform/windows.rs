@@ -18,8 +18,8 @@ use windows_sys::Win32::Storage::FileSystem::{
 };
 use windows_sys::Win32::System::Registry::{RegGetValueW, HKEY_CURRENT_USER, RRF_RT_REG_DWORD};
 use windows_sys::Win32::UI::Shell::{
-    SHEmptyRecycleBinW, SHQueryRecycleBinW, ShellExecuteExW, SHELLEXECUTEINFOW,
-    SHERB_NOCONFIRMATION, SHERB_NOPROGRESSUI, SHERB_NOSOUND, SHQUERYRBINFO,
+    SHEmptyRecycleBinW, SHQueryRecycleBinW, SHERB_NOCONFIRMATION, SHERB_NOPROGRESSUI,
+    SHERB_NOSOUND, SHQUERYRBINFO,
 };
 
 use super::RecycleLimit;
@@ -268,27 +268,3 @@ pub fn move_no_replace(from: &Path, to: &Path) -> io::Result<()> {
     }
     Ok(())
 }
-
-/// Opens a file with its default app (the "open" verb). Callers refuse executables first
-/// (D-040); the path comes from a scan tree, never from the UI.
-pub fn open_with_default_app(path: &Path) -> io::Result<()> {
-    let verb = wide(OsStr::new("open"));
-    let file = wide(display_path(path).as_os_str());
-    // SAFETY: zeroed is a valid SHELLEXECUTEINFOW (null pointers, no flags); the strings are
-    // NUL-terminated and outlive the call.
-    let ok = unsafe {
-        let mut info: SHELLEXECUTEINFOW = std::mem::zeroed();
-        info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
-        info.lpVerb = verb.as_ptr();
-        info.lpFile = file.as_ptr();
-        info.nShow = SW_SHOWNORMAL;
-        ShellExecuteExW(&mut info)
-    };
-    if ok == 0 {
-        return Err(io::Error::last_os_error());
-    }
-    Ok(())
-}
-
-/// `SW_SHOWNORMAL`; the constant lives behind a `windows-sys` feature we do not otherwise need.
-const SW_SHOWNORMAL: i32 = 1;

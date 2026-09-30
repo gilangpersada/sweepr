@@ -74,8 +74,3 @@ pub fn recycle_bin_item_paths() -> io::Result<Vec<PathBuf>> {
 pub fn move_no_replace(_from: &Path, _to: &Path) -> io::Result<()> {
     Err(io::Error::from(io::ErrorKind::Unsupported))
 }
-
-/// Opens a file with its default app. Not supported here yet.
-pub fn open_with_default_app(_path: &Path) -> io::Result<()> {
-    Err(io::Error::from(io::ErrorKind::Unsupported))
-}

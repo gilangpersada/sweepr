@@ -1,12 +1,20 @@
 import { m } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Page } from "../components/AppShell";
-import { AlertIcon, BroomIcon, ChartIcon, DriveIcon, TrashIcon } from "../components/icons";
+import {
+  AlertIcon,
+  BroomIcon,
+  ChartIcon,
+  DriveIcon,
+  MoonIcon,
+  SunIcon,
+  TrashIcon,
+} from "../components/icons";
 import { Spinner } from "../components/states";
 import { Button } from "../components/ui/Button";
 import { Card, type Tone } from "../components/ui/Card";
 import { ProgressBar } from "../components/ui/ProgressBar";
-import { SECTION_TITLE } from "../components/ui/styles";
+import { PAGE_BODY, SECTION_TITLE } from "../components/ui/styles";
 import type { AsyncState } from "../hooks/useAsync";
 import type { ScanState } from "../hooks/useScan";
 import {
@@ -39,6 +47,7 @@ export function Home({ drives, scan, result, finishedAt, active, onNavigate }: P
   const { t, fmt } = i18n;
   const [bin, setBin] = useState<Loadable<RecycleBinInfo>>("loading");
   const [estimate, setEstimate] = useState<Loadable<CleanupEstimate>>("loading");
+  const hour = useHour();
 
   // Refresh on each visit: cleaning or emptying elsewhere changes both numbers. The
   // estimate walks the cleaner's folders (read-only) in the background; the page never waits.
@@ -83,9 +92,17 @@ export function Home({ drives, scan, result, finishedAt, active, onNavigate }: P
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto w-full max-w-5xl space-y-8 p-8">
+      <div className={PAGE_BODY}>
         <header>
-          <h1 className="text-3xl font-bold">{t.nav.home}</h1>
+          <h1 className="flex items-center gap-3 text-3xl font-bold">
+            <span
+              aria-hidden="true"
+              className="flex size-11 shrink-0 items-center justify-center rounded-control border-2 border-line bg-primary text-on-accent shadow-hard-sm"
+            >
+              {isDaytime(hour) ? <SunIcon className="size-6" /> : <MoonIcon className="size-6" />}
+            </span>
+            {t.home.greeting(hour)}
+          </h1>
           <p className="mt-1 text-muted">{t.home.tagline}</p>
         </header>
 
@@ -247,8 +264,11 @@ function Step({
     >
       <Card tone={tone} className="flex w-full flex-col gap-3 p-4">
         <div className="flex items-center gap-3">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-control border-2 border-line bg-primary font-mono font-bold text-on-accent">
-            {index + 1}
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-control border-2 border-line bg-primary text-on-accent"
+          >
+            {icon}
           </span>
           <h3 className="text-lg font-bold">{title}</h3>
         </div>
@@ -256,7 +276,6 @@ function Step({
         {extra && <div className="text-sm">{extra}</div>}
         <Button
           variant={primary ? "primary" : "secondary"}
-          icon={icon}
           disabled={disabled}
           onClick={onClick}
           className="mt-auto self-start"
@@ -267,6 +286,19 @@ function Step({
     </m.div>
   );
 }
+
+/** Current local hour (0–23), re-read every minute so the greeting follows the clock. */
+function useHour(): number {
+  const [hour, setHour] = useState(() => new Date().getHours());
+  useEffect(() => {
+    const timer = window.setInterval(() => setHour(new Date().getHours()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return hour;
+}
+
+/** Sun from 06:00 to 17:59, moon otherwise (the greeting text has its own ranges per language). */
+const isDaytime = (hour: number) => hour >= 6 && hour < 18;
 
 const usedShare = (d: DriveInfo) => (d.totalBytes > 0 ? d.usedBytes / d.totalBytes : 0);
 const driveTitle = (d: DriveInfo) => (d.name ? `${d.name} (${d.mountPoint})` : d.mountPoint);

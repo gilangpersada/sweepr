@@ -90,10 +90,6 @@ struct RulesFile {
     /// Parsed by the scanner (`Categories`); only tolerated here.
     #[serde(rename = "category_extensions", default)]
     _category_extensions: serde_json::Value,
-    #[serde(rename = "_executable_note", default)]
-    _executable_note: Option<String>,
-    #[serde(rename = "executable_extensions", default)]
-    _executable_extensions: serde_json::Value,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]

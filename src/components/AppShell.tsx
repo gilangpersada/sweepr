@@ -1,5 +1,6 @@
 import { AnimatePresence, m } from "motion/react";
 import type { ReactNode } from "react";
+import logo from "../assets/logo.png";
 import type { ScanState } from "../hooks/useScan";
 import { useI18n } from "../lib/i18n";
 import { BroomIcon, ChartIcon, DriveIcon, HomeIcon, SettingsIcon, TrashIcon } from "./icons";
@@ -36,15 +37,12 @@ export function AppShell({ page, onNavigate, hasResult, scan, onCancel, children
   return (
     <div className="flex h-screen bg-canvas text-ink">
       <aside className="flex w-56 shrink-0 flex-col gap-6 overflow-y-auto border-r-[3px] border-line bg-surface p-4">
-        <div className="flex gap-1" aria-hidden="true">
-          {"SWEEPR".split("").map((ch, i) => (
-            <span
-              key={i}
-              className="flex size-6 items-center justify-center rounded-sm border-2 border-line bg-primary text-sm font-bold text-on-accent"
-            >
-              {ch}
-            </span>
-          ))}
+        {/* Brand: the app icon (fox with a broom) and the name. */}
+        <div className="flex items-center gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-control border-2 border-line bg-primary-soft shadow-hard-sm">
+            <img src={logo} alt="" className="size-9" draggable={false} />
+          </span>
+          <span className="text-2xl font-bold tracking-tight">Sweepr</span>
         </div>
 
         <nav aria-label={t.nav.label} className="flex flex-col gap-2">

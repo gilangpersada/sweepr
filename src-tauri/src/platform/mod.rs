@@ -38,19 +38,6 @@ pub use os::{
     recycle_bin_info, recycle_bin_item_paths, recycle_bin_limit, ROOT_PROTECTED_NAMES,
 };
 
-/// Opens a file with the OS default app. `path` must come from a scan tree. Links are
-/// refused (never followed, hard rule 4), and so are folders.
-pub fn open_file(path: &Path) -> io::Result<()> {
-    let meta = std::fs::symlink_metadata(path)?;
-    if os::is_link(&meta) || meta.is_dir() {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "only plain files can be opened",
-        ));
-    }
-    os::open_with_default_app(path)
-}
-
 /// The cleaner rules file for this OS (`config/cleaner-rules.<os>.json`).
 pub const CLEANER_RULES_JSON: &str = os::CLEANER_RULES_JSON;
 
@@ -124,19 +111,6 @@ mod tests {
         move_no_replace(&from, &free).unwrap();
         assert_eq!(std::fs::read_to_string(&free).unwrap(), "new");
         assert!(!from.exists());
-    }
-
-    #[test]
-    fn open_file_refuses_folders_and_missing_files() {
-        let dir = tempfile::tempdir().unwrap();
-        assert_eq!(
-            open_file(dir.path()).unwrap_err().kind(),
-            io::ErrorKind::InvalidInput
-        );
-        assert_eq!(
-            open_file(&dir.path().join("gone.pdf")).unwrap_err().kind(),
-            io::ErrorKind::NotFound
-        );
     }
 
     #[cfg(target_os = "windows")]

@@ -43,9 +43,8 @@ Tidak ada di MVP kecuali "Kosongkan Recycle Bin" (aksi terpisah, konfirmasi send
 - **Tidak pernah menimpa atau mengganti nama.** Pemindahan memakai `MoveFileExW` tanpa `MOVEFILE_REPLACE_EXISTING`: Windows sendiri menolak bila tujuan sudah ada, jadi tidak ada jeda antara cek dan pindah. `trash::os_limited::restore_all` **tidak dipakai**: ia menimpa saat tabrakan (`FOF_NO_UI`) dan memakai nama tanpa ekstensi.
 - Setiap pemulihan dicatat di log (`"action":"restore"`). Tidak ada hapus permanen per item; "Kosongkan Recycle Bin" tetap satu-satunya.
 
-## Buka file (M6, D-040)
-- Hanya lewat `node_id` dari hasil scan; symlink/junction dan folder ditolak.
-- File yang menjalankan program (`executable_extensions` di config: `.exe`, `.msi`, `.bat`, `.ps1`, `.js`, `.lnk`, `.reg`, ...) ditolak di backend; UI hanya menawarkan "Buka di Explorer" untuknya.
+## Membuka file
+Sweepr tidak membuka atau menjalankan file (fitur "Buka file" M6 dihapus, D-041). Dari daftar file hanya ada "Buka di Explorer" (Explorer yang menampilkan file terpilih; lewat `node_id`, tidak mengikuti link) dan "Salin path".
 
 ## Tes wajib
 - Path `..` dan path relatif ditolak / dinormalisasi.
@@ -55,4 +54,3 @@ Tidak ada di MVP kecuali "Kosongkan Recycle Bin" (aksi terpisah, konfirmasi send
 - Batas jumlah item ditegakkan.
 - Preview kedaluwarsa (file sudah berubah) ditolak saat eksekusi.
 - Pulihkan: lokasi asal terisi → dilewati, isi tidak berubah; item hilang/catatan berubah/folder asal hilang/di balik junction → dilewati; daftar tak dikenal/terpakai/kedaluwarsa ditolak.
-- Buka file: file yang bisa dijalankan dan folder ditolak.

@@ -77,20 +77,6 @@ pub struct SkippedView {
 }
 
 impl ScanResult {
-    /// Path of a node that may be opened with its default app: a file, and not one that
-    /// would run a program (`executable_extensions`, D-040).
-    pub fn openable_path(&self, id: NodeId) -> Result<PathBuf, ScanError> {
-        let node = self.tree.get(id)?;
-        let path = self.tree.path(id)?;
-        if node.is_dir {
-            return Err(ScanError::NotAFile(path));
-        }
-        if self.categories.is_executable(&node.name) {
-            return Err(ScanError::Executable(path));
-        }
-        Ok(path)
-    }
-
     /// Unreadable entries in the order they were met, `limit` at a time.
     pub fn skipped_page(&self, offset: usize, limit: usize) -> SkippedPage {
         SkippedPage {

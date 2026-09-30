@@ -100,10 +100,10 @@ Semua ketentuan di `SAFETY_RULES.md` berlaku. Jika ada konflik, SAFETY_RULES men
 
 ## 9. Layar (wireframe teks)
 
-Semua layar adalah isi menu di sidebar kiri (D-033, D-038), bergaya Neo-Brutalism (D-031). Tiap menu punya keterangan singkat di bawah namanya.
+Semua layar adalah isi menu di sidebar kiri (D-033, D-038), bergaya Neo-Brutalism (D-031). Tiap menu punya keterangan singkat di bawah namanya. Di atas menu: ikon app (rubah) + "Sweepr" (D-041). Isi setiap halaman rata kiri di bawah judulnya dengan lebar maksimum yang sama; hanya Hasil Scan yang selebar jendela (tabel).
 ```
 +----------------------+----------------------------------------+
-| [S][W][E][E][P][R]   |  (isi menu yang dipilih)               |
+| [rubah] Sweepr       |  (isi menu yang dipilih)               |
 | > Beranda            |                                        |
 |   Ringkasan & aksi   |                                        |
 |   Scan               |                                        |
@@ -118,22 +118,24 @@ Semua layar adalah isi menu di sidebar kiri (D-033, D-038), bergaya Neo-Brutalis
 ```
 Saat app dibuka: loading screen — wordmark "SWEEPR" dalam ubin + balok kuning menyapu "debu" (D-036) sampai daftar drive siap (minimal ±600 ms). Bila gagal: pesan error + "Coba lagi" di layar yang sama.
 
-**Layar 1 — Beranda** (aksi cepat, D-038)
+**Layar 1 — Beranda** (aksi cepat, D-038, D-041)
 ```
+[☾] Selamat malam                         <- sapaan menurut jam lokal
+Lihat apa yang memakan ruang disk, lalu bersihkan dengan aman.
 KONDISI SEKARANG
 [DRIVE PALING PENUH       ] [RECYCLE BIN               ] [SCAN TERAKHIR        ]
 [C:  ████████░░            ] [9,4 GB                    ] [C:\                  ]
 [179 GB sisa dari 931 GB   ] [23 item · masih memakan   ] [720 GB · 977.412 file]
 [                          ] [ruang   (danger bila isi) ] [10 menit yang lalu   ]
 MAU APA?
-[1 Scan            ] [2 Lihat hasil       ] [3 Bersihkan            ] [4 Kosongkan          ]
-[Cari folder dan   ] [Telusuri folder,    ] [Temp, installer lama,  ] [Recycle Bin masih    ]
-[file terbesar.    ] [file terbesar,      ] [node_modules lama.     ] [memakan 9,4 GB. Tidak]
-[                  ] [kategori            ] [± 8,1 GB bisa dibersih-] [bisa dibatalkan.     ]
+[(ikon) Scan       ] [(ikon) Lihat hasil  ] [(ikon) Bersihkan       ] [(ikon) Recycle Bin   ]
+[Cari folder dan   ] [Telusuri folder,    ] [Temp, installer lama,  ] [Masih memakan 9,4 GB.]
+[file terbesar.    ] [file terbesar,      ] [node_modules lama.     ] [Pulihkan yang perlu, ]
+[                  ] [kategori            ] [± 8,1 GB bisa dibersih-] [lalu kosongkan.      ]
 [[Mulai scan]      ] [[Buka hasil]        ] [kan  [Buka Pembersih]  ] [[Buka Recycle Bin]   ]
 ⓘ Sweepr hanya memindahkan file ke Recycle Bin. Hapus permanen hanya lewat "Kosongkan Recycle Bin".
 ```
-"Mulai scan" membuka menu Scan (tidak langsung memindai). Perkiraan "± X GB" dihitung di latar belakang oleh `estimate_cleanup`, tanpa mengganggu preview di Pembersih. Angka diperbarui setiap Beranda dibuka.
+Sapaan: pagi 04–10, siang 11–14, sore 15–17, malam 18–03 (English: morning / afternoon / evening); ikon matahari 06–17, bulan selain itu. "Mulai scan" membuka menu Scan (tidak langsung memindai). Perkiraan "± X GB" dihitung di latar belakang oleh `estimate_cleanup`, tanpa mengganggu preview di Pembersih. Angka diperbarui setiap Beranda dibuka.
 
 **Layar 2 — Scan** (satu-satunya tempat mulai scan, selain "Scan ulang")
 ```
@@ -167,10 +169,10 @@ Klik kategori → daftar file (per halaman):
 ```
 [← Semua kategori]  ■ File Installer   30,5 GB · 5.806 file
 NAMA & LOKASI                              UKURAN ▼  DIUBAH     AKSI
-Win11_23H2_English_x64.iso                 6,2 GB    9 Nov 2023  [Buka][Explorer][Salin]
-FC26_Trial.exe                             445 MB    7 Agu 2026  [--- ][Explorer][Salin]
+Win11_23H2_English_x64.iso                 6,2 GB    9 Nov 2023  [Explorer][Salin]
+FC26_Trial.exe                             445 MB    7 Agu 2026  [Explorer][Salin]
 ```
-File yang menjalankan program (`.exe`, `.msi`, `.bat`, ...) tidak punya tombol "Buka file" (D-040).
+Tidak ada "Buka file" (dihapus, D-041): file dibuka sendiri lewat Explorer.
 Jendela sempit (±800 px): kolom "File" di tabel folder disembunyikan, kolom % hanya angka.
 
 **Layar 4 — Pembersih**
@@ -181,8 +183,9 @@ UMUM
 [x] Installer lama             4.1 GB   Risiko: Rendah   [Lihat detail]
 CACHE DEVELOPER
 [ ] node_modules project lama  9.8 GB   Risiko: Sedang   [Lihat detail]
-Total dipilih: 6.4 GB                   [Lanjut ke konfirmasi]
+[ Dipilih: 798 item · 8,1 GB            [Lanjut ke konfirmasi] ]   <- kartu melayang
 ```
+Kartu "Dipilih" menempel di bawah saat daftar di-scroll dan berada tepat di bawah kartu terakhir di ujung daftar; lebarnya sama dengan daftar (D-041).
 Konfirmasi: judul berlatar danger + ikon peringatan; [Batal] (fokus awal) [ikon tempat sampah + "Pindahkan ke Recycle Bin"].
 
 **Layar 5 — Recycle Bin** (D-033, D-039)

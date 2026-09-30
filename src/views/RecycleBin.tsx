@@ -6,7 +6,7 @@ import { ErrorState, LoadingState } from "../components/states";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { CountUp } from "../components/ui/CountUp";
-import { SECTION_TITLE } from "../components/ui/styles";
+import { PAGE_BODY, SECTION_TITLE } from "../components/ui/styles";
 import {
   emptyRecycleBin,
   getRecycleBinInfo,
@@ -123,7 +123,7 @@ export function RecycleBin({ active }: Props) {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
+        <div className={PAGE_BODY}>
           <p className="text-muted">{t.recycleBin.explain}</p>
 
           {info.kind === "loading" && <LoadingState text={t.recycleBin.loading} />}

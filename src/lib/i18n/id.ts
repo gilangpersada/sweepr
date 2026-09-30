@@ -51,6 +51,15 @@ export const id = {
   },
 
   home: {
+    /** By local hour: pagi 04–10, siang 11–14, sore 15–17, malam 18–03. */
+    greeting: (hour: number): string =>
+      hour >= 4 && hour < 11
+        ? "Selamat pagi"
+        : hour >= 11 && hour < 15
+          ? "Selamat siang"
+          : hour >= 15 && hour < 18
+            ? "Selamat sore"
+            : "Selamat malam",
     tagline: "Lihat apa yang memakan ruang disk, lalu bersihkan dengan aman.",
     now: "Kondisi sekarang",
     fullestDrive: "Drive paling penuh",
@@ -76,9 +85,9 @@ export const id = {
     estimate: (size: string) => `± ${size} bisa dibersihkan`,
     estimating: "Menghitung…",
     estimateNone: "Saat ini tidak ada yang perlu dibersihkan.",
-    step4Title: "Kosongkan",
+    step4Title: "Recycle Bin",
     step4Text: (size: string) =>
-      `Recycle Bin masih memakan ${size}. Mengosongkan = hapus permanen, tidak bisa dibatalkan.`,
+      `Masih memakan ${size}. Pulihkan yang masih perlu, lalu kosongkan. Mengosongkan = hapus permanen.`,
     step4Empty: "Recycle Bin sudah kosong.",
     step4Button: "Buka Recycle Bin",
     safety:
@@ -175,8 +184,6 @@ export const id = {
   },
 
   actions: {
-    open: "Buka file",
-    openBlocked: "File ini menjalankan program, jadi hanya bisa dibuka di Explorer.",
     reveal: "Buka di Explorer",
     copyPath: "Salin path",
     copied: "Path disalin",
@@ -307,9 +314,6 @@ export const id = {
     unknownScan: "Hasil scan sudah tidak berlaku. Silakan scan ulang.",
     unknownNode: "Item tidak ditemukan di hasil scan.",
     unknownCategory: "Kategori tidak dikenal.",
-    notAFile: "Hanya file yang bisa dibuka.",
-    executable:
-      "File ini menjalankan program, jadi tidak dibuka dari Sweepr. Gunakan “Buka di Explorer”.",
     rulesInvalid: "Aturan pembersih rusak, jadi pembersih dimatikan. Laporkan ke pengembang.",
     unknownRule: "Aturan pembersih tidak dikenal.",
     unknownPreview: "Preview sudah tidak berlaku. Muat ulang daftar.",

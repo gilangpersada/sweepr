@@ -6,7 +6,7 @@ import { ProgressBanner } from "../components/ProgressBanner";
 import { EmptyState, ErrorState, LoadingState } from "../components/states";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { SECTION_TITLE } from "../components/ui/styles";
+import { PAGE_BODY, SECTION_TITLE } from "../components/ui/styles";
 import type { AsyncState } from "../hooks/useAsync";
 import type { ScanState } from "../hooks/useScan";
 import { pickFolder, type DriveInfo } from "../lib/api";
@@ -44,7 +44,7 @@ export function Scan({ drives, scan, onScan, onCancel }: Props) {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl space-y-8 p-6">
+        <div className={PAGE_BODY}>
           {scan.status === "scanning" && (
             <ProgressBanner path={scan.path} progress={scan.progress} onCancel={onCancel} />
           )}

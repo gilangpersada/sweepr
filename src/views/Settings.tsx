@@ -1,7 +1,7 @@
 import { getVersion } from "@tauri-apps/api/app";
 import { useEffect, useState, type ReactNode } from "react";
 import { Card } from "../components/ui/Card";
-import { SECTION_TITLE } from "../components/ui/styles";
+import { PAGE_BODY, SECTION_TITLE } from "../components/ui/styles";
 import { LANGS, useI18n, type Lang } from "../lib/i18n";
 import { THEME_PREFS, useTheme, type ThemePref } from "../lib/theme";
 
@@ -69,7 +69,7 @@ export function Settings() {
         <h1 className="text-xl font-bold">{t.settings.title}</h1>
       </header>
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl space-y-6 p-6">
+        <div className={PAGE_BODY}>
           <Section>
             <Choice<Lang>
               name="lang"

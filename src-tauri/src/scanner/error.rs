@@ -25,10 +25,6 @@ pub enum ScanError {
     UnknownNode(u32),
     #[error("unknown file category: {0}")]
     UnknownCategory(String),
-    #[error("not a file: {0}")]
-    NotAFile(PathBuf),
-    #[error("opening this file would run a program: {0}")]
-    Executable(PathBuf),
 }
 
 impl ScanError {
@@ -50,8 +46,6 @@ impl ScanError {
             ScanError::UnknownScan(_) => "unknownScan",
             ScanError::UnknownNode(_) => "unknownNode",
             ScanError::UnknownCategory(_) => "unknownCategory",
-            ScanError::NotAFile(_) => "notAFile",
-            ScanError::Executable(_) => "executable",
         }
     }
 }

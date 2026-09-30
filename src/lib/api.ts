@@ -42,9 +42,7 @@ export interface ScanError {
     | "io"
     | "unknownScan"
     | "unknownNode"
-    | "unknownCategory"
-    | "notAFile"
-    | "executable";
+    | "unknownCategory";
   message: string;
 }
 
@@ -95,8 +93,6 @@ export interface ChildrenPage {
 
 export interface FileView extends NodeView {
   path: string;
-  /** Category file lists only: `false` for files that would run a program (D-040). */
-  openable?: boolean;
 }
 
 export type SortBy = "size" | "name" | "modified" | "fileCount";
@@ -172,14 +168,6 @@ export function getCategoryFiles(args: {
   limit: number;
 }): Promise<FilesPage> {
   return invoke<FilesPage>("get_category_files", args);
-}
-
-/**
- * Opens a scanned file with its default app. Sends the node id; the backend refuses folders
- * and files that would run a program (code "executable").
- */
-export function openFile(scanId: ScanId, nodeId: number): Promise<void> {
-  return invoke("open_file", { scanId, nodeId });
 }
 
 export interface SkippedPage {

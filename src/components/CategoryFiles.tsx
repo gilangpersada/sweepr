@@ -18,7 +18,7 @@ import { Card } from "./ui/Card";
 import { VirtualList } from "./VirtualList";
 
 const ROW_HEIGHT = 48;
-const GRID = "grid grid-cols-[minmax(0,1fr)_6.5rem_7.5rem_6rem] items-center gap-3 px-3";
+const GRID = "grid grid-cols-[minmax(0,1fr)_6.5rem_7.5rem_4.5rem] items-center gap-3 px-3";
 
 interface Props {
   scanId: ScanId;
@@ -132,13 +132,7 @@ export function CategoryFiles({
                 {fmt.date(f.modified)}
               </div>
               <div role="cell">
-                <RowActions
-                  scanId={scanId}
-                  nodeId={f.id}
-                  path={f.path}
-                  notify={notify}
-                  openable={f.openable ?? false}
-                />
+                <RowActions scanId={scanId} nodeId={f.id} path={f.path} notify={notify} />
               </div>
             </div>
           );
