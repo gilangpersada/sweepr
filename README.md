@@ -50,7 +50,3 @@ Before committing, run:
 5. To uninstall, go to **Settings → Apps → Installed apps → Sweepr** (this also asks for admin rights).
 
 Cleanup log: `%LOCALAPPDATA%\com.sweepr.app\logs\cleanup.jsonl`.
-
-## Working with Claude Code
-
-Work on one milestone per session from `docs/TASKS.md`. The project's starting prompt is in `docs/START_PROMPT.md`.
