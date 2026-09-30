@@ -115,7 +115,20 @@ Sejak M5 semua layar adalah isi menu di sidebar kiri (D-033), bergaya Neo-Brutal
 ```
 Saat app dibuka: loading screen — wordmark "SWEEPR" dalam ubin + balok kuning menyapu "debu" (D-036) sampai daftar drive siap (minimal ±600 ms). Bila gagal: pesan error + "Coba lagi" di layar yang sama.
 
-**Layar 1 — Beranda**
+**Rencana M6 — Beranda baru (D-038)** — menggantikan Layar 1; kartu drive + pilih folder pindah ke menu Scan.
+```
+KONDISI SEKARANG
+[C:  ████████░░ 180 GB sisa dari 931 GB] [Recycle Bin 9,4 GB · 23 item] [Scan terakhir C: · 720 GB · 10 mnt lalu]
+MAU APA?
+[1 Scan            ] [2 Lihat hasil       ] [3 Bersihkan            ] [4 Kosongkan          ]
+[Cari folder apa   ] [Telusuri folder,    ] [Temp, installer lama,  ] [Recycle Bin masih    ]
+[yang paling besar ] [file terbesar,      ] [node_modules lama.     ] [memakan 9,4 GB.      ]
+[                  ] [kategori            ] [± 7,7 GB bisa dibersih-] [Tidak bisa dibatalkan]
+[[Mulai scan →]    ] [[Buka hasil →]      ] [kan  [Buka Pembersih →]] [[Buka →]  (danger)   ]
+ⓘ Sweepr hanya memindahkan file ke Recycle Bin. Hapus permanen hanya lewat "Kosongkan Recycle Bin".
+```
+
+**Layar 1 — Beranda** (M5)
 ```
 [progress scan bila sedang berjalan                         [Batal]]
 [Hasil scan terakhir: C:\ · 718 GB · 960.815 file     [Lihat hasil]]

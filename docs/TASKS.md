@@ -153,3 +153,37 @@ Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism,
 - Perilaku: scan selesai membuka Hasil Scan hanya bila pengguna masih di Beranda; di menu lain tidak ditarik pindah.
 - Cek manual sebagian (2026-09-30, pemilik): scan drive berjalan di `npm run tauri dev`. Sempat terlihat macet di "Memulai…" pada sesi dev lama yang sudah menerima banyak hot-reload; hilang setelah `tauri dev` dijalankan ulang (build release dan dev baru sudah dicek: progress normal, pindah ke Hasil Scan setelah selesai).
 - **Belum:** sisa cek manual di Windows (pemilik). Daftar cek: splash (terang/gelap, ubin jatuh, balok menyapu, hilang setelah drive siap); pindah menu tidak menghilangkan posisi folder/tab/pilihan pembersih; indikator scan di sidebar + Batalkan scan; tema Ikut sistem/Terang/Gelap diingat setelah restart, title bar ikut; bahasa di Pengaturan; Windows "Animation effects" mati → hanya fade, bar/debu diam; dialog konfirmasi langsung bisa dibaca dan fokus awal di Batal; jendela 800 px (kolom "File" hilang, tabel tetap terbaca); Tab/Enter di sidebar dan fokus terlihat.
+
+## M6 — Menu Scan, Beranda ringkas, isi Recycle Bin, file per kategori (setelah M5)
+Tujuan: dari masukan pemilik setelah M5 (2026-09-30). Scan punya menu sendiri, Beranda hanya berisi aksi cepat yang jelas, Recycle Bin menampilkan isinya dan bisa memulihkan item, tab Kategori bisa menampilkan file per kategori. Tidak ada hapus permanen baru (D-003 tetap). Keputusan: D-038 s/d D-040; pertanyaan terbuka M6 di `DECISIONS.md`.
+
+**Menu & Beranda (D-038)**
+- [ ] Menu baru **Scan** (antara Beranda dan Hasil Scan): kartu drive, pilih folder, progress scan + Batal, pesan batal/gagal. Scan hanya dimulai dari sini (dan "Scan ulang" di Hasil Scan)
+- [ ] Beranda bagian **Kondisi sekarang** (3 kartu kecil, angka + label jelas): drive paling penuh (bar + sisa ruang, warna danger bila ≥ 90%), Recycle Bin (ukuran + jumlah item, "masih memakan ruang"), Scan terakhir (path, ukuran, kapan) atau "belum ada scan"
+- [ ] Beranda bagian **Mau apa?**: 4 kartu bernomor sesuai alur, tiap kartu satu kalimat "untuk apa" + satu tombol ke menunya: (1) Scan → menu Scan (tidak memulai scan langsung), (2) Lihat hasil → Hasil Scan (nonaktif + "scan dulu" bila belum ada), (3) Bersihkan → Pembersih, dengan perkiraan "± X GB bisa dibersihkan", (4) Kosongkan → Recycle Bin (warna danger, "tidak bisa dibatalkan"). Pengaturan hanya di sidebar
+- [ ] Satu baris catatan keamanan di bawah: Sweepr hanya memindahkan ke Recycle Bin; hapus permanen hanya lewat "Kosongkan Recycle Bin"
+- [ ] Backend: `estimate_cleanup` — total ukuran + jumlah item per rule yang **dicentang otomatis**, tanpa menyimpan preview (backend hanya menyimpan satu preview; memakai `preview_cleanup` dari Beranda akan membatalkan preview yang sedang dibuka di Pembersih). Hanya membaca; tes bahwa preview aktif tetap berlaku setelah `estimate_cleanup`
+- [ ] Perkiraan dimuat di latar belakang (tidak menahan Beranda/splash), tampil "menghitung…" lalu angkanya; dihitung ulang saat Beranda dibuka lagi dan setelah pembersihan
+- [ ] Sidebar: tiap menu punya keterangan singkat (tooltip/sub-teks) supaya pengguna tahu isinya; urutan menu: Beranda, Scan, Hasil Scan, Pembersih, Recycle Bin, Pengaturan
+- [ ] Scan selesai → pindah ke Hasil Scan bila pengguna masih di menu Scan (aturan M5 disesuaikan)
+
+**Isi Recycle Bin (D-039)**
+- [ ] Backend: `list_recycle_bin` lewat `trash::os_limited::list` + `metadata` (tanpa dependency baru): nama, lokasi asal, ukuran, tanggal dihapus, folder/file. Mengembalikan **ID** dari daftar yang dibuat backend; daftar kedaluwarsa seperti preview pembersih
+- [ ] Backend: `restore_from_recycle_bin(list_id, item_ids)`: frontend hanya mengirim ID; backend mencari item lagi, melewati item yang sudah tidak ada atau yang lokasi asalnya sudah terisi (tidak menimpa, tidak mengganti nama), hasil per item + alasan gagal, dicatat di log JSON lines
+- [ ] Tes: ID tak dikenal/kedaluwarsa, lokasi asal sudah ada (tidak ditimpa), item hilang sejak daftar dibuat; tes Recycle Bin asli `#[ignore]` seperti M3 (buang file dummy → tampil di daftar → pulihkan → kembali utuh)
+- [ ] UI: satu daftar gabungan semua drive (seperti Explorer), tabel virtual (nama, lokasi asal, drive, ukuran, tanggal dihapus), filter per drive (tampil bila > 1 drive), ringkasan ukuran per drive, cari, urut, centang per item, tombol **Pulihkan** dengan konfirmasi (jumlah + total ukuran); "Kosongkan Recycle Bin" tetap satu-satunya hapus permanen
+- [ ] Ringkasan ukuran/isi tetap ada di atas daftar; daftar dimuat ulang setelah pulihkan/kosongkan
+
+**File per kategori (D-040)**
+- [ ] Backend: `get_category_files(scan_id, node_id, category, sort, offset, limit)`: file kategori itu di bawah folder breadcrumb, per halaman (seperti `get_children`), tanpa mengirim seluruh daftar sekaligus
+- [ ] Tes: hasil hanya berisi kategori yang diminta, ikut subtree folder, sort + paging benar, kategori tak dikenal → error
+- [ ] UI: klik baris kategori (atau segmen bar) → daftar file kategori itu (nama, lokasi, ukuran, tanggal) dengan aksi **Buka file**, **Buka di Explorer**, **Salin path**; kembali ke ringkasan kategori
+- [ ] "Buka file" lewat backend dengan `node_id` (bukan path dari frontend), dibuka dengan aplikasi bawaan Windows. File yang bisa dijalankan (daftar ekstensi di config: `.exe`, `.msi`, `.bat`, `.cmd`, `.ps1`, `.vbs`, `.lnk`, `.scr`, `.com`, ...) tidak diberi tombol ini dan ditolak backend; hanya "Buka di Explorer". Tes penolakannya
+- [ ] Bar kategori: label nama + persentase di dalam segmen yang cukup lebar, legenda di bawah bar untuk segmen kecil, tooltip lengkap (nama, ukuran, persen, jumlah file) di setiap segmen; bisa difokus dengan keyboard
+
+**Penutup**
+- [ ] Semua teks baru lewat i18n (`id.ts` + `en.ts`); cek grep teks tertanam
+- [ ] Perbarui `PRD.md` §9, `ARCHITECTURE.md` (command baru, Frontend), `SAFETY_RULES.md` (pulihkan dari Recycle Bin)
+- [ ] `cargo test`, `clippy`, `typecheck`, `lint`, `prettier` bersih; cek manual di Windows dicatat di sini
+
+**Selesai jika:** scan hanya dari menu Scan dan Beranda berisi aksi cepat yang dipahami tanpa penjelasan; isi Recycle Bin tampil dan item terpilih bisa dipulihkan ke lokasi asal tanpa menimpa file; file per kategori bisa dilihat, dibuka, dan disalin path-nya; bar kategori punya label dan persentase; semua tes lulus.

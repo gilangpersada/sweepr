@@ -32,7 +32,7 @@ src-tauri/src/
   safety.rs          # protected paths + path validation
   drives.rs          # list_drives via sysinfo
 src/                 # React app
-  components/ views/ hooks/ lib/ (typed wrappers around invoke)
+  components/ (ui/ = Neo-Brutalism base components) views/ hooks/ lib/ (typed wrappers around invoke)
 config/              # cleaner rules per OS
 docs/                # PRD, architecture, tasks, roadmap
 ```
