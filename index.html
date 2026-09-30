@@ -4,9 +4,81 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sweepr</title>
+    <!-- Sets data-theme before the first paint (D-034). External file: the CSP blocks inline scripts. -->
+    <script src="/theme-init.js"></script>
+    <!-- Static splash (D-036): shown until React takes over, so the window is never blank.
+         Same layout as src/components/SplashScreen.tsx; colors mirror the tokens in index.css. -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #fff6e0;
+      }
+      html[data-theme="dark"],
+      html[data-theme="dark"] body {
+        background: #151417;
+      }
+      #splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+      }
+      #splash .word {
+        display: flex;
+        gap: 10px;
+      }
+      #splash .tile {
+        width: 56px;
+        height: 56px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 700;
+        color: #141414;
+        border: 3px solid #141414;
+        border-radius: 8px;
+        box-shadow: 4px 4px 0 0 #141414;
+      }
+      html[data-theme="dark"] #splash .tile {
+        border-color: #e9e2d3;
+        box-shadow: 4px 4px 0 0 #e9e2d3;
+      }
+      #splash .t0,
+      #splash .t4 {
+        background: #ffd23f;
+      }
+      #splash .t1,
+      #splash .t5 {
+        background: #ff6b81;
+      }
+      #splash .t2 {
+        background: #6cb4ff;
+      }
+      #splash .t3 {
+        background: #5ee08a;
+      }
+      #splash .track {
+        width: 386px;
+        height: 28px;
+      }
+    </style>
   </head>
 
   <body>
+    <div id="splash" aria-hidden="true">
+      <div class="word">
+        <span class="tile t0">S</span><span class="tile t1">W</span><span class="tile t2">E</span
+        ><span class="tile t3">E</span><span class="tile t4">P</span><span class="tile t5">R</span>
+      </div>
+      <div class="track"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

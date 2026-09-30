@@ -1,79 +1,74 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useI18n } from "../lib/i18n";
+import { AlertIcon } from "./icons";
+import { Button } from "./ui/Button";
+import { Dialog } from "./ui/Dialog";
 
 interface Props {
   open: boolean;
   title: string;
   children: ReactNode;
   confirmLabel: string;
-  /** "danger" for actions that cannot be undone. */
+  /** Shown before the confirm label; destructive actions pass their icon (SAFETY_RULES). */
+  confirmIcon?: ReactNode;
+  /** "danger" for actions that delete or move the user's files. */
   tone?: "primary" | "danger";
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-/** Modal confirmation built on `<dialog>`: focus trapping and Esc come from the browser. */
+/**
+ * Modal confirmation. The dialog animation never hides its content: title, text and both
+ * buttons are readable and usable from the first frame (see `ui/Dialog`).
+ */
 export function ConfirmDialog({
   open,
   title,
   children,
   confirmLabel,
+  confirmIcon,
   tone = "primary",
   busy = false,
   onConfirm,
   onCancel,
 }: Props) {
   const { t } = useI18n();
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
-  const confirmClass =
-    tone === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700";
+  const danger = tone === "danger";
 
   return (
-    <dialog
-      ref={ref}
-      // Esc fires `cancel`; keep React state in charge of closing.
-      onCancel={(e) => {
-        e.preventDefault();
-        if (!busy) onCancel();
-      }}
-      aria-labelledby="confirm-title"
-      className="m-auto w-full max-w-md rounded-lg bg-white p-0 text-zinc-900 shadow-xl backdrop:bg-black/40 dark:bg-zinc-800 dark:text-zinc-100"
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      dismissable={!busy}
+      labelledBy="confirm-title"
+      className="max-w-md"
     >
-      <div className="space-y-4 p-6">
-        <h2 id="confirm-title" className="text-lg font-semibold">
+      <div
+        className={`flex items-center gap-3 border-b-[3px] border-line px-6 py-4 ${danger ? "bg-danger" : "bg-primary"}`}
+      >
+        {danger && <AlertIcon className="size-6 shrink-0 text-on-accent" />}
+        <h2 id="confirm-title" className="text-lg font-bold text-on-accent">
           {title}
         </h2>
-        <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">{children}</div>
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={busy}
-            // Safe default: Enter on open cancels rather than confirms.
-            autoFocus
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:hover:bg-zinc-700"
-          >
+      </div>
+      <div className="space-y-4 p-6">
+        <div className="space-y-2 text-sm">{children}</div>
+        <div className="flex justify-end gap-3 pt-2">
+          {/* Safe default: focus starts on Cancel, so Enter right after opening does nothing harmful. */}
+          <Button onClick={onCancel} disabled={busy} data-autofocus>
             {t.common.cancel}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant={danger ? "danger" : "primary"}
+            icon={busy ? undefined : confirmIcon}
             onClick={onConfirm}
             disabled={busy}
-            className={`rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${confirmClass}`}
           >
             {busy ? t.common.processing : confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
-    </dialog>
+    </Dialog>
   );
 }

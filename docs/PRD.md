@@ -100,47 +100,69 @@ Semua ketentuan di `SAFETY_RULES.md` berlaku. Jika ada konflik, SAFETY_RULES men
 
 ## 9. Layar (wireframe teks)
 
-**Layar 1 — Beranda**
-```
-[Drive C:  ████████░░ 82% terpakai · sisa 45 GB   [Scan]]
-[Drive D:  ███░░░░░░░ 31% terpakai · sisa 640 GB  [Scan]]
-[ Pilih folder lain... ]
-```
-
-**Layar 2 — Hasil scan**
-```
-Breadcrumb: C: > Users > gilang
-Kategori: Video 120 GB | Foto 30 GB | Arsip 18 GB | ...
--------------------------------------------------------
-Nama            Ukuran     %      File   Diubah
-Videos          120 GB     48%    312    2 hari lalu
-node_modules... ...
-[Tab: Folder | File Terbesar]        [Pembersih]  ← layar sendiri (D-023)
-```
-
-**Tata letak M5 (rencana, D-031 s/d D-036)** — Layar 1–3 menjadi isi menu; gaya Neo-Brutalism.
+Sejak M5 semua layar adalah isi menu di sidebar kiri (D-033), bergaya Neo-Brutalism (D-031).
 ```
 +--------------+------------------------------------------+
-| SWEEPR       |  (isi menu yang dipilih)                 |
+| [S][W][E]... |  (isi menu yang dipilih)                 |
 | > Beranda    |                                          |
-|   Hasil Scan |                                          |
+|   Hasil Scan |  <- nonaktif sampai ada hasil scan       |
 |   Pembersih  |                                          |
 |   Recycle Bin|                                          |
 |   Pengaturan |                                          |
-| [scan 42%..] |  <- progress scan terlihat dari mana pun |
+| [Memindai…]  |  <- progress + "Batalkan scan", terlihat |
+| [▓▓░░ 12 GB] |     dari menu mana pun                   |
 +--------------+------------------------------------------+
 ```
-Saat app dibuka: loading screen (wordmark "SWEEPR" dalam ubin + balok penyapu beranimasi, D-036) sampai daftar drive siap.
+Saat app dibuka: loading screen — wordmark "SWEEPR" dalam ubin + balok kuning menyapu "debu" (D-036) sampai daftar drive siap (minimal ±600 ms). Bila gagal: pesan error + "Coba lagi" di layar yang sama.
 
-**Layar 3 — Pembersih** (dibuka dari Beranda atau header hasil scan; di M5 dari menu)
+**Layar 1 — Beranda**
 ```
-Recycle Bin: 1.2 GB (40 item)                  [Kosongkan Recycle Bin…]
+[progress scan bila sedang berjalan                         [Batal]]
+[Hasil scan terakhir: C:\ · 718 GB · 960.815 file     [Lihat hasil]]
+DRIVE                                                 [Muat ulang]
+[C:  ████████░░  590 GB terpakai · 45 GB sisa dari 931 GB]  <- kartu, klik = scan
+[D:  ███░░░░░░░  ...]
+[FOLDER [Pilih folder…]]      [PEMBERSIH penjelasan [Buka Pembersih]]
+```
+
+**Layar 2 — Hasil Scan** (terbuka otomatis saat scan selesai, bila pengguna masih di Beranda)
+```
+C:\                                                   [Scan ulang]
+718 GB · 960.815 file · selesai dalam 32,3 detik · 606 item tidak bisa dibaca [Lihat daftar]
+[Folder] [File Terbesar] [Kategori]
+[↑]  C:\ / Users / [gilang]
+-------------------------------------------------------
+NAMA            UKURAN     % DARI FOLDER   FILE   DIUBAH
+Videos          120 GB     ███░░ 48%       312    2 Sep 2026
+node_modules... ...
+```
+Tab Kategori: bar bertumpuk besar + tabel (kategori, ukuran, bagian, jumlah file) untuk folder di breadcrumb. Jendela sempit (±800 px): kolom "File" disembunyikan, kolom % hanya angka.
+
+**Layar 3 — Pembersih**
+```
+Pembersih                                             [Muat ulang]
 UMUM
 [x] File sementara             2.3 GB   Risiko: Rendah   [Lihat detail]
 [x] Installer lama             4.1 GB   Risiko: Rendah   [Lihat detail]
 CACHE DEVELOPER
 [ ] node_modules project lama  9.8 GB   Risiko: Sedang   [Lihat detail]
 Total dipilih: 6.4 GB                   [Lanjut ke konfirmasi]
+```
+Konfirmasi: judul berlatar danger + ikon peringatan; [Batal] (fokus awal) [ikon tempat sampah + "Pindahkan ke Recycle Bin"].
+
+**Layar 4 — Recycle Bin** (dipisah dari Pembersih, D-033)
+```
+Recycle Bin                                           [Muat ulang]
+Penjelasan: isi masih bisa dipulihkan; ruang baru kosong setelah dikosongkan.
+[UKURAN 1,2 GB]  [ISI 40 item]
+[⚠ Tindakan ini tidak bisa dibatalkan.   [ikon + "Kosongkan Recycle Bin…"]]
+```
+
+**Layar 5 — Pengaturan**
+```
+BAHASA   [Bahasa Indonesia] [English]
+TEMA     [Ikut sistem] [Terang] [Gelap]
+TENTANG  Sweepr Versi 0.1.0 · semua proses berjalan lokal
 ```
 
 ## 10. Risiko

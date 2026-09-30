@@ -20,8 +20,24 @@ export const id = {
     retry: "Coba lagi",
     loading: "Memuat…",
     processing: "Memproses…",
-    back: "← Kembali",
-    language: "Bahasa",
+    refresh: "Muat ulang",
+  },
+
+  nav: {
+    label: "Menu utama",
+    home: "Beranda",
+    results: "Hasil Scan",
+    resultsHint: "Scan drive atau folder dulu",
+    cleaner: "Pembersih",
+    recycleBin: "Recycle Bin",
+    settings: "Pengaturan",
+    scanning: "Memindai…",
+    cancelScan: "Batalkan scan",
+  },
+
+  splash: {
+    loading: "Memuat Sweepr…",
+    failed: (reason: string) => `Sweepr belum bisa memuat daftar drive. ${reason}`,
   },
 
   home: {
@@ -37,6 +53,8 @@ export const id = {
     openCleaner: "Buka Pembersih",
     scanCancelled: "Scan dibatalkan.",
     scanFailed: (reason: string) => `Scan gagal: ${reason}`,
+    lastResult: "Hasil scan terakhir",
+    openResult: "Lihat hasil",
   },
 
   drive: {
@@ -52,15 +70,15 @@ export const id = {
   },
 
   result: {
-    home: "← Beranda",
     finishedIn: (seconds: string) => `selesai dalam ${seconds} detik`,
     unreadable: (items: string) => `${items} tidak bisa dibaca`,
     unreadableHint: "Biasanya folder sistem yang aksesnya ditolak. Ukurannya tidak dihitung.",
     showList: "Lihat daftar",
     rescan: "Scan ulang",
-    cleaner: "Pembersih",
+    tabsLabel: "Tampilan hasil",
     tabFolders: "Folder",
     tabLargest: "File Terbesar",
+    tabCategories: "Kategori",
   },
 
   skipped: {
@@ -79,6 +97,9 @@ export const id = {
   categories: {
     label: "Ringkasan kategori",
     empty: "Folder ini tidak berisi file.",
+    category: "Kategori",
+    share: "Bagian",
+    files: "File",
     names: {
       video: "Video",
       photo: "Foto",
@@ -152,8 +173,11 @@ export const id = {
   },
 
   recycleBin: {
-    label: "Recycle Bin:",
-    loading: "memuat…",
+    title: "Recycle Bin",
+    loading: "Memuat info Recycle Bin…",
+    size: "Ukuran",
+    items: "Isi",
+    isEmpty: "Recycle Bin sudah kosong.",
     explain:
       "File yang dibersihkan dipindah ke sini dan masih bisa dipulihkan. Ruang disk baru benar-benar kosong setelah Recycle Bin dikosongkan.",
     empty: "Kosongkan Recycle Bin…",
@@ -162,6 +186,19 @@ export const id = {
     confirmLead: (items: string, size: string) =>
       `Semua isi Recycle Bin di semua drive (${items}, ${size}) akan dihapus permanen, termasuk file yang Anda buang sendiri di luar Sweepr.`,
     cannotUndo: "Tindakan ini tidak bisa dibatalkan.",
+  },
+
+  settings: {
+    title: "Pengaturan",
+    language: "Bahasa",
+    theme: "Tema",
+    themeSystem: "Ikut sistem",
+    themeLight: "Terang",
+    themeDark: "Gelap",
+    themeHint: "“Ikut sistem” mengikuti pengaturan terang/gelap Windows.",
+    about: "Tentang",
+    version: (v: string) => `Versi ${v}`,
+    localOnly: "Semua proses berjalan di komputer ini. Tidak ada data yang dikirim ke internet.",
   },
 
   cleanupResult: {

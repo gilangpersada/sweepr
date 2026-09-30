@@ -18,8 +18,24 @@ export const en: Messages = {
     retry: "Try again",
     loading: "Loading…",
     processing: "Working…",
-    back: "← Back",
-    language: "Language",
+    refresh: "Reload",
+  },
+
+  nav: {
+    label: "Main menu",
+    home: "Home",
+    results: "Scan results",
+    resultsHint: "Scan a drive or folder first",
+    cleaner: "Cleaner",
+    recycleBin: "Recycle Bin",
+    settings: "Settings",
+    scanning: "Scanning…",
+    cancelScan: "Cancel scan",
+  },
+
+  splash: {
+    loading: "Loading Sweepr…",
+    failed: (reason: string) => `Sweepr could not load the list of drives. ${reason}`,
   },
 
   home: {
@@ -35,6 +51,8 @@ export const en: Messages = {
     openCleaner: "Open Cleaner",
     scanCancelled: "Scan cancelled.",
     scanFailed: (reason: string) => `Scan failed: ${reason}`,
+    lastResult: "Last scan result",
+    openResult: "View results",
   },
 
   drive: {
@@ -50,15 +68,15 @@ export const en: Messages = {
   },
 
   result: {
-    home: "← Home",
     finishedIn: (seconds: string) => `done in ${seconds} s`,
     unreadable: (items: string) => `${items} could not be read`,
     unreadableHint: "Usually system folders where access is denied. Their size is not counted.",
     showList: "Show list",
     rescan: "Scan again",
-    cleaner: "Cleaner",
+    tabsLabel: "Result views",
     tabFolders: "Folders",
     tabLargest: "Largest files",
+    tabCategories: "Categories",
   },
 
   skipped: {
@@ -77,6 +95,9 @@ export const en: Messages = {
   categories: {
     label: "Category summary",
     empty: "This folder has no files.",
+    category: "Category",
+    share: "Share",
+    files: "Files",
     names: {
       video: "Video",
       photo: "Photos",
@@ -164,8 +185,11 @@ export const en: Messages = {
   },
 
   recycleBin: {
-    label: "Recycle Bin:",
-    loading: "loading…",
+    title: "Recycle Bin",
+    loading: "Loading Recycle Bin info…",
+    size: "Size",
+    items: "Contents",
+    isEmpty: "The Recycle Bin is already empty.",
     explain:
       "Cleaned files are moved here and can still be restored. Disk space is only freed once the Recycle Bin is emptied.",
     empty: "Empty Recycle Bin…",
@@ -174,6 +198,19 @@ export const en: Messages = {
     confirmLead: (items: string, size: string) =>
       `Everything in the Recycle Bin on all drives (${items}, ${size}) will be deleted permanently, including files you deleted yourself outside Sweepr.`,
     cannotUndo: "This cannot be undone.",
+  },
+
+  settings: {
+    title: "Settings",
+    language: "Language",
+    theme: "Theme",
+    themeSystem: "Follow system",
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeHint: "“Follow system” uses the Windows light/dark setting.",
+    about: "About",
+    version: (v: string) => `Version ${v}`,
+    localOnly: "Everything runs on this computer. No data is sent to the internet.",
   },
 
   cleanupResult: {

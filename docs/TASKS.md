@@ -102,45 +102,53 @@ Tujuan: UI lebih rapi, tiap fitur punya menu sendiri, gaya visual Neo-Brutalism,
 
 **Persiapan**
 - [x] Jawab pertanyaan terbuka M5 di `DECISIONS.md` (font, palet warna, toggle tema, lebar sidebar) — dijawab 2026-09-29: D-031, D-033 s/d D-035 (D-035 diganti D-036)
-- [ ] Tambah dependency `motion` (D-032); pakai `LazyMotion` + `m` supaya bundle kecil
-- [ ] Design token Neo-Brutalism di `src/index.css` (`@theme` Tailwind v4): warna, border tebal, bayangan keras, radius, font; versi terang dan gelap (D-031)
+- [x] Tambah dependency `motion` (D-032); pakai `LazyMotion` + `m` supaya bundle kecil
+- [x] Design token Neo-Brutalism di `src/index.css` (`@theme` Tailwind v4): warna, border tebal, bayangan keras, radius, font; versi terang dan gelap (D-031)
 - [x] Font lokal Space Grotesk + JetBrains Mono (`.woff2` + lisensi OFL di `src/assets/fonts/`, D-031); tanpa jaringan (CSP D-009) — variable font latin + latin-ext dari Fontsource 5.3.0 (±97 KB total), sumber dan `unicode-range` di `src/assets/fonts/README.md`
-- [ ] Komponen dasar di `src/components/ui/`: `Button` (primary/secondary/danger), `Card`, `Badge`, `Tabs`, `Checkbox`, `Input`, `ProgressBar`, `Dialog`; komponen lama beralih memakainya
+- [x] Komponen dasar di `src/components/ui/`: `Button` (primary/secondary/danger), `Card`, `Badge`, `Tabs`, `Checkbox`, `Input`, `ProgressBar`, `Dialog`; komponen lama beralih memakainya
 
 **Menu & pemisahan fitur**
-- [ ] `AppShell`: sidebar menu di kiri + area konten; sidebar selalu lebar, ikon + teks (D-033)
-- [ ] Menu (D-033): **Beranda** (drive + pilih folder), **Hasil Scan** (aktif setelah scan; tab Folder / File Terbesar / Kategori), **Pembersih**, **Recycle Bin** (dipisah dari layar Pembersih), **Pengaturan** (bahasa, tema, info versi)
-- [ ] Pindah menu tidak menghapus hasil scan atau posisi folder; progress scan yang sedang jalan terlihat dari menu mana pun (indikator di sidebar)
-- [ ] Pilihan bahasa pindah dari Beranda ke Pengaturan
-- [ ] Navigasi keyboard: menu bisa dipakai dengan Tab/Enter, fokus selalu terlihat
+- [x] `AppShell`: sidebar menu di kiri + area konten; sidebar selalu lebar, ikon + teks (D-033)
+- [x] Menu (D-033): **Beranda** (drive + pilih folder), **Hasil Scan** (aktif setelah scan; tab Folder / File Terbesar / Kategori), **Pembersih**, **Recycle Bin** (dipisah dari layar Pembersih), **Pengaturan** (bahasa, tema, info versi)
+- [x] Pindah menu tidak menghapus hasil scan atau posisi folder; progress scan yang sedang jalan terlihat dari menu mana pun (indikator di sidebar)
+- [x] Pilihan bahasa pindah dari Beranda ke Pengaturan
+- [x] Navigasi keyboard: menu bisa dipakai dengan Tab/Enter, fokus selalu terlihat
 
 **Tema Neo-Brutalism**
-- [ ] Terapkan ke semua layar: Beranda, Hasil Scan (tabel, breadcrumb, kategori, file terbesar), Pembersih, Recycle Bin, Pengaturan, semua dialog, state kosong/error/loading
-- [ ] Pilihan tema di Pengaturan: Ikut sistem (bawaan) / Terang / Gelap, diingat antar sesi; `dark:` Tailwind memakai atribut `data-theme` (D-034)
-- [ ] Tema dipasang sebelum render pertama (skrip kecil di file terpisah, bukan inline) supaya tidak berkedip, termasuk splash; title bar jendela ikut tema
-- [ ] Kontras teks minimal WCAG AA di kedua tema
-- [ ] Aksi berbahaya (Pindahkan ke Recycle Bin, Kosongkan Recycle Bin) tetap paling jelas dibedakan (warna danger + ikon + teks), sesuai SAFETY_RULES
+- [x] Terapkan ke semua layar: Beranda, Hasil Scan (tabel, breadcrumb, kategori, file terbesar), Pembersih, Recycle Bin, Pengaturan, semua dialog, state kosong/error/loading
+- [x] Pilihan tema di Pengaturan: Ikut sistem (bawaan) / Terang / Gelap, diingat antar sesi; `dark:` Tailwind memakai atribut `data-theme` (D-034)
+- [x] Tema dipasang sebelum render pertama (skrip kecil di file terpisah, bukan inline) supaya tidak berkedip, termasuk splash; title bar jendela ikut tema
+- [x] Kontras teks minimal WCAG AA di kedua tema
+- [x] Aksi berbahaya (Pindahkan ke Recycle Bin, Kosongkan Recycle Bin) tetap paling jelas dibedakan (warna danger + ikon + teks), sesuai SAFETY_RULES
 
 **Animasi (`motion`)**
-- [ ] `MotionConfig reducedMotion="user"`: bila Windows mengatur "Animation effects" mati, animasi gerak dimatikan
-- [ ] Transisi antar menu/halaman (fade + geser pendek, ≤ 250 ms)
-- [ ] Umpan balik tombol dan kartu: hover/tekan menggeser bayangan keras
-- [ ] Dialog muncul/hilang; kartu drive dan kartu rule muncul bertahap (stagger)
-- [ ] Progress scan dan bar pemakaian drive beranimasi halus; total ukuran hasil scan/pembersihan naik bertahap (count-up)
-- [ ] **Tidak** menganimasikan baris `VirtualList` satu per satu (kinerja tabel ±1 juta node); target PRD "tidak freeze > 200 ms" tetap berlaku
-- [ ] Animasi tidak pernah menunda atau menyembunyikan isi dialog konfirmasi hapus (tombol langsung bisa dibaca dan dipakai)
+- [x] `MotionConfig reducedMotion="user"`: bila Windows mengatur "Animation effects" mati, animasi gerak dimatikan
+- [x] Transisi antar menu/halaman (fade + geser pendek, ≤ 250 ms)
+- [x] Umpan balik tombol dan kartu: hover/tekan menggeser bayangan keras
+- [x] Dialog muncul/hilang; kartu drive dan kartu rule muncul bertahap (stagger)
+- [x] Progress scan dan bar pemakaian drive beranimasi halus; total ukuran hasil scan/pembersihan naik bertahap (count-up)
+- [x] **Tidak** menganimasikan baris `VirtualList` satu per satu (kinerja tabel ±1 juta node); target PRD "tidak freeze > 200 ms" tetap berlaku
+- [x] Animasi tidak pernah menunda atau menyembunyikan isi dialog konfirmasi hapus (tombol langsung bisa dibaca dan dipakai)
 
 **Loading screen**
-- [ ] Splash statis di `index.html` (CSS inline, tampil sebelum JavaScript dimuat): wordmark "SWEEPR" dalam ubin, tanpa gerak, supaya tidak ada layar kosong/putih
-- [ ] Tanpa logo (D-036): wordmark "SWEEPR" per huruf dalam ubin berborder tebal + bayangan keras
-- [ ] React mengambil alih dengan animasi: ubin huruf jatuh satu per satu (stagger); di bawahnya balok kuning menyapu "debu" (kotak/bulatan kecil) dari kiri ke kanan berulang sebagai indikator muat
-- [ ] Splash hilang (animasi keluar) setelah data awal siap (`list_drives`); tampil minimal ±600 ms supaya tidak berkedip, tanpa jeda buatan lain
-- [ ] Bila data awal gagal: splash berganti ke `ErrorState` dengan "Coba lagi", bukan macet
-- [ ] Dengan reduced motion: wordmark statis, hanya fade
+- [x] Splash statis di `index.html` (CSS inline, tampil sebelum JavaScript dimuat): wordmark "SWEEPR" dalam ubin, tanpa gerak, supaya tidak ada layar kosong/putih
+- [x] Tanpa logo (D-036): wordmark "SWEEPR" per huruf dalam ubin berborder tebal + bayangan keras
+- [x] React mengambil alih dengan animasi: ubin huruf jatuh satu per satu (stagger); di bawahnya balok kuning menyapu "debu" (kotak/bulatan kecil) dari kiri ke kanan berulang sebagai indikator muat
+- [x] Splash hilang (animasi keluar) setelah data awal siap (`list_drives`); tampil minimal ±600 ms supaya tidak berkedip, tanpa jeda buatan lain
+- [x] Bila data awal gagal: splash berganti ke `ErrorState` dengan "Coba lagi", bukan macet
+- [x] Dengan reduced motion: wordmark statis, hanya fade
 
 **Penutup**
-- [ ] Semua teks baru lewat i18n (`id.ts` + `en.ts`); tidak ada teks tertanam (cek grep seperti M4)
-- [ ] Perbarui wireframe di `PRD.md` §9 dan bagian Frontend di `ARCHITECTURE.md`
-- [ ] `npm run tauri build` sukses; catat ukuran installer dan bundle JS (sebelum/sesudah `motion`)
+- [x] Semua teks baru lewat i18n (`id.ts` + `en.ts`); tidak ada teks tertanam (cek grep seperti M4)
+- [x] Perbarui wireframe di `PRD.md` §9 dan bagian Frontend di `ARCHITECTURE.md`
+- [x] `npm run tauri build` sukses; catat ukuran installer dan bundle JS (sebelum/sesudah `motion`)
 
 **Selesai jika:** semua fitur bisa dibuka dari menu tanpa kehilangan hasil scan; semua layar memakai gaya Neo-Brutalism di tema terang dan gelap; animasi berjalan dan mati saat reduced motion aktif; loading screen tampil saat app dibuka; `typecheck`, `lint`, `prettier`, `cargo test`, `clippy` bersih; cek manual di Windows dicatat di sini.
+
+**Catatan M5 (2026-09-30)** — keputusan D-031 s/d D-037 (detail implementasi, palet final, kontras, ukuran: D-037).
+- Otomatis: `typecheck`, `lint`, `prettier --check`, `cargo test` (72 lulus), `clippy -D warnings`, `npm run build` — bersih. Backend tidak diubah; satu izin baru `core:window:allow-set-theme` (title bar ikut tema).
+- Bundle JS 274,3 → 387,3 KB (gzip 84,1 → 120,7 KB) setelah `motion`; CSS 26,9 → 28,7 KB; font ±97 KB. Installer `Sweepr_0.1.0_x64-setup.exe` 1,59 → 1,76 MiB, `sweepr.exe` 4,8 → 4,9 MB.
+- Kontras WCAG AA dihitung dari token (bukan diukur di layar): terendah 5,73:1 (terang), 6,13:1 (gelap).
+- Teks baru lewat i18n; grep teks tertanam hanya menemukan nama merek "Sweepr"/"SWEEPR" (wordmark, sengaja tidak diterjemahkan).
+- Perilaku: scan selesai membuka Hasil Scan hanya bila pengguna masih di Beranda; di menu lain tidak ditarik pindah.
+- **Belum:** cek manual `npm run tauri dev` di Windows (pemilik). Daftar cek: splash (terang/gelap, ubin jatuh, balok menyapu, hilang setelah drive siap); pindah menu tidak menghilangkan posisi folder/tab/pilihan pembersih; indikator scan di sidebar + Batalkan scan; tema Ikut sistem/Terang/Gelap diingat setelah restart, title bar ikut; bahasa di Pengaturan; Windows "Animation effects" mati → hanya fade, bar/debu diam; dialog konfirmasi langsung bisa dibaca dan fokus awal di Batal; jendela 800 px (kolom "File" hilang, tabel tetap terbaca); Tab/Enter di sidebar dan fokus terlihat.
