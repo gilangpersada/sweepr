@@ -34,9 +34,22 @@ mod os {
 }
 
 pub use os::{
-    display_path, empty_recycle_bin, is_hidden, is_link, path_eq, protected_paths,
-    recycle_bin_info, recycle_bin_limit, ROOT_PROTECTED_NAMES,
+    display_path, empty_recycle_bin, is_hidden, is_link, move_no_replace, path_eq, protected_paths,
+    recycle_bin_info, recycle_bin_item_paths, recycle_bin_limit, ROOT_PROTECTED_NAMES,
 };
+
+/// Opens a file with the OS default app. `path` must come from a scan tree. Links are
+/// refused (never followed, hard rule 4), and so are folders.
+pub fn open_file(path: &Path) -> io::Result<()> {
+    let meta = std::fs::symlink_metadata(path)?;
+    if os::is_link(&meta) || meta.is_dir() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "only plain files can be opened",
+        ));
+    }
+    os::open_with_default_app(path)
+}
 
 /// The cleaner rules file for this OS (`config/cleaner-rules.<os>.json`).
 pub const CLEANER_RULES_JSON: &str = os::CLEANER_RULES_JSON;
@@ -89,6 +102,41 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let err = reveal_in_file_manager(&dir.path().join("gone.txt")).unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::NotFound);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn move_no_replace_never_overwrites() {
+        let dir = tempfile::tempdir().unwrap();
+        let (from, to) = (dir.path().join("from.txt"), dir.path().join("to.txt"));
+        std::fs::write(&from, "new").unwrap();
+        std::fs::write(&to, "keep me").unwrap();
+        let err = move_no_replace(&from, &to).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::AlreadyExists, "{err}");
+        assert_eq!(std::fs::read_to_string(&to).unwrap(), "keep me");
+        assert!(from.exists(), "source stays when the move is refused");
+
+        // A folder in the way is refused too; a free name works.
+        std::fs::remove_file(&to).unwrap();
+        std::fs::create_dir(&to).unwrap();
+        assert!(move_no_replace(&from, &to).is_err());
+        let free = dir.path().join("free.txt");
+        move_no_replace(&from, &free).unwrap();
+        assert_eq!(std::fs::read_to_string(&free).unwrap(), "new");
+        assert!(!from.exists());
+    }
+
+    #[test]
+    fn open_file_refuses_folders_and_missing_files() {
+        let dir = tempfile::tempdir().unwrap();
+        assert_eq!(
+            open_file(dir.path()).unwrap_err().kind(),
+            io::ErrorKind::InvalidInput
+        );
+        assert_eq!(
+            open_file(&dir.path().join("gone.pdf")).unwrap_err().kind(),
+            io::ErrorKind::NotFound
+        );
     }
 
     #[cfg(target_os = "windows")]

@@ -24,6 +24,7 @@ export const en: Messages = {
   nav: {
     label: "Main menu",
     home: "Home",
+    scan: "Scan",
     results: "Scan results",
     resultsHint: "Scan a drive or folder first",
     cleaner: "Cleaner",
@@ -31,6 +32,14 @@ export const en: Messages = {
     settings: "Settings",
     scanning: "Scanning…",
     cancelScan: "Cancel scan",
+    hints: {
+      home: "Overview & quick actions",
+      scan: "Choose a drive or folder",
+      results: "Folders, files, categories",
+      cleaner: "Temporary files & caches",
+      recycleBin: "Restore or empty",
+      settings: "Language & theme",
+    },
   },
 
   splash: {
@@ -40,19 +49,52 @@ export const en: Messages = {
 
   home: {
     tagline: "See what is using your disk space, then clean it up safely.",
+    now: "Right now",
+    fullestDrive: "Fullest drive",
+    noDrives: "No drives found.",
+    binTitle: "Recycle Bin",
+    binTaking: (items: string) => `${items} · still taking up space`,
+    binEmpty: "Empty",
+    lastScan: "Last scan",
+    noScan: "No scan yet",
+    scanningNow: "Scanning now…",
+    whatNext: "What do you want to do?",
+    step1Title: "Scan",
+    step1Text: "Find out which folders and files are the largest.",
+    step1Button: "Start a scan",
+    step2Title: "View results",
+    step2Text: "Browse folders, the largest files and categories of the last scan.",
+    step2Button: "Open results",
+    step2Disabled: "Scan first to see results.",
+    step3Title: "Clean up",
+    step3Text:
+      "Temporary files, old installers and old node_modules. You review them before anything moves.",
+    step3Button: "Open Cleaner",
+    estimate: (size: string) => `About ${size} can be cleaned`,
+    estimating: "Calculating…",
+    estimateNone: "Nothing needs cleaning right now.",
+    step4Title: "Empty",
+    step4Text: (size: string) =>
+      `The Recycle Bin still takes ${size}. Emptying it deletes permanently and cannot be undone.`,
+    step4Empty: "The Recycle Bin is already empty.",
+    step4Button: "Open Recycle Bin",
+    safety:
+      "Sweepr only moves files to the Recycle Bin. The only permanent delete is “Empty Recycle Bin”.",
+  },
+
+  scan: {
+    title: "Scan",
+    intro:
+      "Choose a drive or folder to see what is using space. A scan only reads; it changes nothing.",
     drives: "Drives",
+    driveHint: "Click a drive card to start scanning.",
     loadingDrives: "Loading drives…",
     noDrives: "No drives found.",
     folder: "Folder",
+    folderHint: "Scan just one folder; faster than a whole drive.",
     chooseFolder: "Choose folder…",
-    cleaner: "Cleaner",
-    cleanerIntro:
-      "Find temporary files, old installers and unused node_modules, then move them to the Recycle Bin after you review them.",
-    openCleaner: "Open Cleaner",
     scanCancelled: "Scan cancelled.",
     scanFailed: (reason: string) => `Scan failed: ${reason}`,
-    lastResult: "Last scan result",
-    openResult: "View results",
   },
 
   drive: {
@@ -98,6 +140,12 @@ export const en: Messages = {
     category: "Category",
     share: "Share",
     files: "Files",
+    hint: "Click a category to see its files.",
+    segment: (label: string, size: string, percent: string, files: string) =>
+      `${label}: ${size} · ${percent} · ${files}`,
+    showFiles: (label: string) => `Show ${label} files`,
+    back: "← All categories",
+    filesOf: (label: string) => `${label} files`,
     names: {
       video: "Video",
       photo: "Photos",
@@ -124,6 +172,8 @@ export const en: Messages = {
   },
 
   actions: {
+    open: "Open file",
+    openBlocked: "This file runs a program, so it can only be shown in Explorer.",
     reveal: "Show in Explorer",
     copyPath: "Copy path",
     copied: "Path copied",
@@ -190,6 +240,31 @@ export const en: Messages = {
     size: "Size",
     items: "Contents",
     isEmpty: "The Recycle Bin is already empty.",
+    listTitle: "Recycle Bin contents",
+    loadingList: "Loading Recycle Bin contents…",
+    search: "Search name or location…",
+    allDrives: "All drives",
+    drivesLabel: "Drive filter",
+    colName: "Name",
+    colLocation: "Original location",
+    colDrive: "Drive",
+    colSize: "Size",
+    colDeleted: "Deleted",
+    selectAll: "Select all shown",
+    selectItem: (name: string) => `Select ${name}`,
+    selected: "Selected:",
+    noMatch: "Nothing matches.",
+    unreadable: (count: string) =>
+      `${count} items have an unreadable record, so they are not shown and cannot be restored here.`,
+    restore: "Restore…",
+    restoreTitle: "Restore to the original location?",
+    restoreButton: "Restore",
+    restoreLead: (items: string, size: string) =>
+      `${items} (${size}) will be moved back to where they were deleted from.`,
+    restoreNote:
+      "Items whose original location is taken are skipped. Nothing is overwritten or renamed.",
+    restored: (items: string, size: string) => `${items} (${size}) restored.`,
+    restoreSkipped: (items: string) => `${items} skipped`,
     explain:
       "Cleaned files are moved here and can still be restored. Disk space is only freed once the Recycle Bin is emptied.",
     empty: "Empty Recycle Bin…",
@@ -213,6 +288,18 @@ export const en: Messages = {
     localOnly: "Everything runs on this computer. No data is sent to the internet.",
   },
 
+  restoreReasons: {
+    notFound: "No longer in the Recycle Bin",
+    changed: "Changed since the list was made",
+    originalExists: "Original location is taken",
+    originalFolderMissing: "Original folder no longer exists",
+    insideLink: "Original folder is a shortcut/junction",
+    notAbsolute: "Invalid original location",
+    io: "Could not be read",
+    restoreFailed: "Could not be restored, maybe in use",
+    unknownItem: "Not in the list",
+  } as Record<string, string>,
+
   cleanupResult: {
     moved: (items: string, size: string) => `${items} (${size}) moved to the Recycle Bin.`,
     restoreNote:
@@ -228,6 +315,9 @@ export const en: Messages = {
     io: "Could not be read. Access may be denied.",
     unknownScan: "This scan result is no longer valid. Please scan again.",
     unknownNode: "The item was not found in the scan result.",
+    unknownCategory: "Unknown category.",
+    notAFile: "Only files can be opened.",
+    executable: "This file runs a program, so Sweepr does not open it. Use “Show in Explorer”.",
     rulesInvalid: "The cleaner rules are broken, so the cleaner is turned off. Please report this.",
     unknownRule: "Unknown cleaner rule.",
     unknownPreview: "This list is no longer valid. Reload it.",

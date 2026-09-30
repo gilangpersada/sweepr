@@ -36,6 +36,17 @@ Root drive mana pun (mis. C:\ atau D:\)
 ## Hapus permanen
 Tidak ada di MVP kecuali "Kosongkan Recycle Bin" (aksi terpisah, konfirmasi sendiri, menjelaskan bahwa ini tidak bisa dibatalkan).
 
+## Pulihkan dari Recycle Bin (M6, D-039)
+- UI hanya mengirim `list_id` + ID item dari daftar buatan backend (`list_recycle_bin`); daftar sekali pakai dan kedaluwarsa 30 menit, seperti preview.
+- Path asal dibaca dari catatan `$I` milik Windows, bukan dari nama tampilan shell (yang menyembunyikan ekstensi). Item tanpa catatan yang terbaca tidak ditampilkan dan tidak bisa dipulihkan.
+- Tepat sebelum memindah, dicek lagi: item masih ada, catatan `$I` tidak berubah, lokasi asal kosong, folder asal ada dan bukan/tidak berada di dalam symlink/junction.
+- **Tidak pernah menimpa atau mengganti nama.** Pemindahan memakai `MoveFileExW` tanpa `MOVEFILE_REPLACE_EXISTING`: Windows sendiri menolak bila tujuan sudah ada, jadi tidak ada jeda antara cek dan pindah. `trash::os_limited::restore_all` **tidak dipakai**: ia menimpa saat tabrakan (`FOF_NO_UI`) dan memakai nama tanpa ekstensi.
+- Setiap pemulihan dicatat di log (`"action":"restore"`). Tidak ada hapus permanen per item; "Kosongkan Recycle Bin" tetap satu-satunya.
+
+## Buka file (M6, D-040)
+- Hanya lewat `node_id` dari hasil scan; symlink/junction dan folder ditolak.
+- File yang menjalankan program (`executable_extensions` di config: `.exe`, `.msi`, `.bat`, `.ps1`, `.js`, `.lnk`, `.reg`, ...) ditolak di backend; UI hanya menawarkan "Buka di Explorer" untuknya.
+
 ## Tes wajib
 - Path `..` dan path relatif ditolak / dinormalisasi.
 - Symlink/junction ditolak.
@@ -43,3 +54,5 @@ Tidak ada di MVP kecuali "Kosongkan Recycle Bin" (aksi terpisah, konfirmasi send
 - Path di luar allowed roots ditolak.
 - Batas jumlah item ditegakkan.
 - Preview kedaluwarsa (file sudah berubah) ditolak saat eksekusi.
+- Pulihkan: lokasi asal terisi → dilewati, isi tidak berubah; item hilang/catatan berubah/folder asal hilang/di balik junction → dilewati; daftar tak dikenal/terpakai/kedaluwarsa ditolak.
+- Buka file: file yang bisa dijalankan dan folder ditolak.

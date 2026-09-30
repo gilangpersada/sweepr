@@ -11,7 +11,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, UNIX_EPOCH};
 
-use jwalk::rayon::prelude::*;
 use jwalk::WalkDirGeneric;
 use serde::Serialize;
 
@@ -78,6 +77,20 @@ pub struct SkippedView {
 }
 
 impl ScanResult {
+    /// Path of a node that may be opened with its default app: a file, and not one that
+    /// would run a program (`executable_extensions`, D-040).
+    pub fn openable_path(&self, id: NodeId) -> Result<PathBuf, ScanError> {
+        let node = self.tree.get(id)?;
+        let path = self.tree.path(id)?;
+        if node.is_dir {
+            return Err(ScanError::NotAFile(path));
+        }
+        if self.categories.is_executable(&node.name) {
+            return Err(ScanError::Executable(path));
+        }
+        Ok(path)
+    }
+
     /// Unreadable entries in the order they were met, `limit` at a time.
     pub fn skipped_page(&self, offset: usize, limit: usize) -> SkippedPage {
         SkippedPage {
@@ -145,7 +158,11 @@ pub fn scan(
             // Symlinks and junctions both report `is_symlink()` (on Windows std treats any
             // name-surrogate reparse point as a link), so neither is listed nor entered.
             children.retain(|c| !matches!(c, Ok(e) if e.file_type.is_symlink()));
-            children.par_iter_mut().flatten().for_each(|entry| {
+            // Sequential on purpose. jwalk already reads many folders in parallel on the rayon
+            // pool; a nested `par_iter` here lets this thread steal jwalk's own "next folder"
+            // job while it waits, and that job blocks until this very folder is done: a
+            // deadlock that left scans stuck at 0 files (M6, found in `tauri dev`).
+            children.iter_mut().flatten().for_each(|entry| {
                 match fs::symlink_metadata(entry.parent_path.join(&entry.file_name)) {
                     Ok(m) => {
                         entry.client_state.size = if m.is_dir() { 0 } else { m.len() };

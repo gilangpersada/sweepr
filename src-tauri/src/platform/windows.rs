@@ -13,13 +13,13 @@ use std::process::Command;
 
 use windows_sys::Win32::Foundation::E_UNEXPECTED;
 use windows_sys::Win32::Storage::FileSystem::{
-    GetVolumeNameForVolumeMountPointW, GetVolumePathNameW, FILE_ATTRIBUTE_HIDDEN,
+    GetVolumeNameForVolumeMountPointW, GetVolumePathNameW, MoveFileExW, FILE_ATTRIBUTE_HIDDEN,
     FILE_ATTRIBUTE_REPARSE_POINT,
 };
 use windows_sys::Win32::System::Registry::{RegGetValueW, HKEY_CURRENT_USER, RRF_RT_REG_DWORD};
 use windows_sys::Win32::UI::Shell::{
-    SHEmptyRecycleBinW, SHQueryRecycleBinW, SHERB_NOCONFIRMATION, SHERB_NOPROGRESSUI,
-    SHERB_NOSOUND, SHQUERYRBINFO,
+    SHEmptyRecycleBinW, SHQueryRecycleBinW, ShellExecuteExW, SHELLEXECUTEINFOW,
+    SHERB_NOCONFIRMATION, SHERB_NOPROGRESSUI, SHERB_NOSOUND, SHQUERYRBINFO,
 };
 
 use super::RecycleLimit;
@@ -246,3 +246,49 @@ pub fn empty_recycle_bin() -> io::Result<()> {
     }
     Ok(())
 }
+
+/// Storage paths (`X:\$Recycle.Bin\<SID>\$R...`) of every item in the current user's
+/// Recycle Bin on all drives. The `trash` crate reports them as the item id.
+pub fn recycle_bin_item_paths() -> io::Result<Vec<PathBuf>> {
+    let items = trash::os_limited::list().map_err(|e| io::Error::other(e.to_string()))?;
+    Ok(items.into_iter().map(|i| PathBuf::from(i.id)).collect())
+}
+
+/// Moves `from` to `to` on the same volume. Never replaces: without
+/// `MOVEFILE_REPLACE_EXISTING` Windows itself refuses when `to` exists (`AlreadyExists`),
+/// so there is no gap between a check and the move.
+pub fn move_no_replace(from: &Path, to: &Path) -> io::Result<()> {
+    let from_w = wide(from.as_os_str());
+    let to_w = wide(to.as_os_str());
+    // SAFETY: both strings are NUL-terminated and outlive the call. Flags 0: no replace, no
+    // copy across volumes.
+    let ok = unsafe { MoveFileExW(from_w.as_ptr(), to_w.as_ptr(), 0) };
+    if ok == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(())
+}
+
+/// Opens a file with its default app (the "open" verb). Callers refuse executables first
+/// (D-040); the path comes from a scan tree, never from the UI.
+pub fn open_with_default_app(path: &Path) -> io::Result<()> {
+    let verb = wide(OsStr::new("open"));
+    let file = wide(display_path(path).as_os_str());
+    // SAFETY: zeroed is a valid SHELLEXECUTEINFOW (null pointers, no flags); the strings are
+    // NUL-terminated and outlive the call.
+    let ok = unsafe {
+        let mut info: SHELLEXECUTEINFOW = std::mem::zeroed();
+        info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
+        info.lpVerb = verb.as_ptr();
+        info.lpFile = file.as_ptr();
+        info.nShow = SW_SHOWNORMAL;
+        ShellExecuteExW(&mut info)
+    };
+    if ok == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(())
+}
+
+/// `SW_SHOWNORMAL`; the constant lives behind a `windows-sys` feature we do not otherwise need.
+const SW_SHOWNORMAL: i32 = 1;

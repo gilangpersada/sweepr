@@ -159,6 +159,24 @@ fn log_lines(e: &Env) -> Vec<serde_json::Value> {
 }
 
 #[test]
+fn estimate_counts_default_rules_and_keeps_the_open_preview_valid() {
+    let e = env();
+    let p = preview_all(&e);
+    let est = e.cleaner.estimate().unwrap();
+    // Only "temp" is checked by default: old1 + old2, never the protected or new file.
+    assert_eq!((est.total_bytes, est.item_count), (150, 2));
+
+    // The preview open in the cleaner still works after Home asked for an estimate.
+    let res = e.cleaner.execute(p.preview_id, &ids(&p)).unwrap();
+    assert_eq!(res.failed_count, 0, "{:?}", res.items);
+    assert_eq!(
+        e.cleaner.estimate().unwrap().item_count,
+        0,
+        "nothing left to clean"
+    );
+}
+
+#[test]
 fn preview_lists_only_old_unprotected_items_largest_first() {
     let e = env();
     let p = preview_all(&e);

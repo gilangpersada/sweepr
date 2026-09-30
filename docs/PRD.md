@@ -100,58 +100,80 @@ Semua ketentuan di `SAFETY_RULES.md` berlaku. Jika ada konflik, SAFETY_RULES men
 
 ## 9. Layar (wireframe teks)
 
-Sejak M5 semua layar adalah isi menu di sidebar kiri (D-033), bergaya Neo-Brutalism (D-031).
+Semua layar adalah isi menu di sidebar kiri (D-033, D-038), bergaya Neo-Brutalism (D-031). Tiap menu punya keterangan singkat di bawah namanya.
 ```
-+--------------+------------------------------------------+
-| [S][W][E]... |  (isi menu yang dipilih)                 |
-| > Beranda    |                                          |
-|   Hasil Scan |  <- nonaktif sampai ada hasil scan       |
-|   Pembersih  |                                          |
-|   Recycle Bin|                                          |
-|   Pengaturan |                                          |
-| [Memindai…]  |  <- progress + "Batalkan scan", terlihat |
-| [▓▓░░ 12 GB] |     dari menu mana pun                   |
-+--------------+------------------------------------------+
++----------------------+----------------------------------------+
+| [S][W][E][E][P][R]   |  (isi menu yang dipilih)               |
+| > Beranda            |                                        |
+|   Ringkasan & aksi   |                                        |
+|   Scan               |                                        |
+|   Pilih drive/folder |                                        |
+|   Hasil Scan         |  <- nonaktif sampai ada hasil scan     |
+|   Pembersih          |                                        |
+|   Recycle Bin        |                                        |
+|   Pengaturan         |                                        |
+| [Memindai… ▓▓░ 12GB] |  <- progress + "Batalkan scan", dari   |
+| [Batalkan scan]      |     menu mana pun                      |
++----------------------+----------------------------------------+
 ```
 Saat app dibuka: loading screen — wordmark "SWEEPR" dalam ubin + balok kuning menyapu "debu" (D-036) sampai daftar drive siap (minimal ±600 ms). Bila gagal: pesan error + "Coba lagi" di layar yang sama.
 
-**Rencana M6 — Beranda baru (D-038)** — menggantikan Layar 1; kartu drive + pilih folder pindah ke menu Scan.
+**Layar 1 — Beranda** (aksi cepat, D-038)
 ```
 KONDISI SEKARANG
-[C:  ████████░░ 180 GB sisa dari 931 GB] [Recycle Bin 9,4 GB · 23 item] [Scan terakhir C: · 720 GB · 10 mnt lalu]
+[DRIVE PALING PENUH       ] [RECYCLE BIN               ] [SCAN TERAKHIR        ]
+[C:  ████████░░            ] [9,4 GB                    ] [C:\                  ]
+[179 GB sisa dari 931 GB   ] [23 item · masih memakan   ] [720 GB · 977.412 file]
+[                          ] [ruang   (danger bila isi) ] [10 menit yang lalu   ]
 MAU APA?
 [1 Scan            ] [2 Lihat hasil       ] [3 Bersihkan            ] [4 Kosongkan          ]
-[Cari folder apa   ] [Telusuri folder,    ] [Temp, installer lama,  ] [Recycle Bin masih    ]
-[yang paling besar ] [file terbesar,      ] [node_modules lama.     ] [memakan 9,4 GB.      ]
-[                  ] [kategori            ] [± 7,7 GB bisa dibersih-] [Tidak bisa dibatalkan]
-[[Mulai scan →]    ] [[Buka hasil →]      ] [kan  [Buka Pembersih →]] [[Buka →]  (danger)   ]
+[Cari folder dan   ] [Telusuri folder,    ] [Temp, installer lama,  ] [Recycle Bin masih    ]
+[file terbesar.    ] [file terbesar,      ] [node_modules lama.     ] [memakan 9,4 GB. Tidak]
+[                  ] [kategori            ] [± 8,1 GB bisa dibersih-] [bisa dibatalkan.     ]
+[[Mulai scan]      ] [[Buka hasil]        ] [kan  [Buka Pembersih]  ] [[Buka Recycle Bin]   ]
 ⓘ Sweepr hanya memindahkan file ke Recycle Bin. Hapus permanen hanya lewat "Kosongkan Recycle Bin".
 ```
+"Mulai scan" membuka menu Scan (tidak langsung memindai). Perkiraan "± X GB" dihitung di latar belakang oleh `estimate_cleanup`, tanpa mengganggu preview di Pembersih. Angka diperbarui setiap Beranda dibuka.
 
-**Layar 1 — Beranda** (M5)
+**Layar 2 — Scan** (satu-satunya tempat mulai scan, selain "Scan ulang")
 ```
+Scan
+Pilih drive atau folder untuk melihat apa yang memakan ruang. Scan hanya membaca.
 [progress scan bila sedang berjalan                         [Batal]]
-[Hasil scan terakhir: C:\ · 718 GB · 960.815 file     [Lihat hasil]]
-DRIVE                                                 [Muat ulang]
-[C:  ████████░░  590 GB terpakai · 45 GB sisa dari 931 GB]  <- kartu, klik = scan
-[D:  ███░░░░░░░  ...]
-[FOLDER [Pilih folder…]]      [PEMBERSIH penjelasan [Buka Pembersih]]
+DRIVE  (klik kartu drive untuk mulai scan)            [Muat ulang]
+[C:  ████████░░  752 GB terpakai · 179 GB sisa dari 931 GB]
+[FOLDER  Scan satu folder saja, lebih cepat.  [Pilih folder…]]
 ```
 
-**Layar 2 — Hasil Scan** (terbuka otomatis saat scan selesai, bila pengguna masih di Beranda)
+**Layar 3 — Hasil Scan** (terbuka otomatis saat scan selesai, bila pengguna masih di menu Scan)
 ```
 C:\                                                   [Scan ulang]
-718 GB · 960.815 file · selesai dalam 32,3 detik · 606 item tidak bisa dibaca [Lihat daftar]
+720 GB · 977.412 file · selesai dalam 18,9 detik · 607 item tidak bisa dibaca [Lihat daftar]
 [Folder] [File Terbesar] [Kategori]
 [↑]  C:\ / Users / [gilang]
 -------------------------------------------------------
 NAMA            UKURAN     % DARI FOLDER   FILE   DIUBAH
 Videos          120 GB     ███░░ 48%       312    2 Sep 2026
-node_modules... ...
 ```
-Tab Kategori: bar bertumpuk besar + tabel (kategori, ukuran, bagian, jumlah file) untuk folder di breadcrumb. Jendela sempit (±800 px): kolom "File" disembunyikan, kolom % hanya angka.
+Tab Kategori (folder di breadcrumb):
+```
+[Lainnya 84%                         |Arsip|Inst|Vid|..]   <- segmen = tombol; label + % bila cukup lebar
+■ Lainnya 84%  ■ Arsip 6,3%  ■ Installer 4,2%  ...       <- legenda, juga bisa diklik
+Klik kategori untuk melihat file-nya.
+KATEGORI     UKURAN   BAGIAN          FILE
+Arsip ›      45,4 GB  █░░░░ 6,3%       430
+```
+Klik kategori → daftar file (per halaman):
+```
+[← Semua kategori]  ■ File Installer   30,5 GB · 5.806 file
+NAMA & LOKASI                              UKURAN ▼  DIUBAH     AKSI
+Win11_23H2_English_x64.iso                 6,2 GB    9 Nov 2023  [Buka][Explorer][Salin]
+FC26_Trial.exe                             445 MB    7 Agu 2026  [--- ][Explorer][Salin]
+```
+File yang menjalankan program (`.exe`, `.msi`, `.bat`, ...) tidak punya tombol "Buka file" (D-040).
+Jendela sempit (±800 px): kolom "File" di tabel folder disembunyikan, kolom % hanya angka.
 
-**Layar 3 — Pembersih**
+**Layar 4 — Pembersih**
 ```
 Pembersih                                             [Muat ulang]
 UMUM
@@ -163,15 +185,23 @@ Total dipilih: 6.4 GB                   [Lanjut ke konfirmasi]
 ```
 Konfirmasi: judul berlatar danger + ikon peringatan; [Batal] (fokus awal) [ikon tempat sampah + "Pindahkan ke Recycle Bin"].
 
-**Layar 4 — Recycle Bin** (dipisah dari Pembersih, D-033)
+**Layar 5 — Recycle Bin** (D-033, D-039)
 ```
 Recycle Bin                                           [Muat ulang]
 Penjelasan: isi masih bisa dipulihkan; ruang baru kosong setelah dikosongkan.
-[UKURAN 1,2 GB]  [ISI 40 item]
+[UKURAN 9,4 GB]  [ISI 23 item]
+ISI RECYCLE BIN
+[Semua drive] [C: 9,4 GB · 23] [D: ...]      <- hanya bila > 1 drive
+[Cari nama atau lokasi…                    ]
+[ ] NAMA / LOKASI ASAL                  UKURAN   DIHAPUS ▼
+[x] capabilities.json                   146 B    28 Sep 2026
+    C:\Users\...\gen\schemas
+Dipilih: 1 item · 146 B                              [Pulihkan…]
 [⚠ Tindakan ini tidak bisa dibatalkan.   [ikon + "Kosongkan Recycle Bin…"]]
 ```
+Pulihkan: konfirmasi (jumlah + ukuran; "item yang lokasi asalnya sudah terisi dilewati, tidak ada yang ditimpa") → hasil: jumlah dipulihkan + daftar yang dilewati dengan alasan.
 
-**Layar 5 — Pengaturan**
+**Layar 6 — Pengaturan**
 ```
 BAHASA   [Bahasa Indonesia] [English]
 TEMA     [Ikut sistem] [Terang] [Gelap]

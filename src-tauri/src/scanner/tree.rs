@@ -213,6 +213,7 @@ impl ScanTree {
                         .path(id)
                         .map(|p| p.to_string_lossy().into_owned())
                         .unwrap_or_default(),
+                    openable: None,
                 }
             })
             .collect()
@@ -263,6 +264,69 @@ impl ScanTree {
             .collect();
         out.sort_by(|a, b| b.size.cmp(&a.size).then_with(|| a.key.cmp(&b.key)));
         Ok(out)
+    }
+
+    /// One page of the files of one category below `id` (recursive), sorted. The whole
+    /// match list is rebuilt per call: cheap next to a scan, and nothing to keep in sync.
+    pub fn category_files(
+        &self,
+        id: NodeId,
+        category: CategoryId,
+        sort: SortBy,
+        order: SortOrder,
+        offset: usize,
+        limit: usize,
+    ) -> Result<FilesPage, ScanError> {
+        let start = self.get(id)?;
+        let mut ids = Vec::new();
+        if start.is_dir {
+            let mut stack = vec![id];
+            while let Some(dir) = stack.pop() {
+                for c in self.children(dir) {
+                    let node = &self.nodes[c.index()];
+                    if node.is_dir {
+                        stack.push(c);
+                    } else if node.category == category {
+                        ids.push(c);
+                    }
+                }
+            }
+        } else if start.category == category {
+            ids.push(id);
+        }
+        ids.sort_by(|a, b| {
+            let (a, b) = (&self.nodes[a.index()], &self.nodes[b.index()]);
+            let ord = match sort {
+                SortBy::Name => cmp_names(&a.name, &b.name),
+                SortBy::Modified => a.modified.cmp(&b.modified),
+                // Files have no file count; size is the useful default.
+                SortBy::Size | SortBy::FileCount => a.size.cmp(&b.size),
+            };
+            let ord = if order == SortOrder::Desc {
+                ord.reverse()
+            } else {
+                ord
+            };
+            ord.then_with(|| cmp_names(&a.name, &b.name))
+                .then_with(|| a.parent.cmp(&b.parent))
+        });
+        let items = ids
+            .iter()
+            .skip(offset)
+            .take(limit)
+            .map(|&c| FileView {
+                node: self.view(c, start.size),
+                path: self
+                    .path(c)
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+                openable: None,
+            })
+            .collect();
+        Ok(FilesPage {
+            total: ids.len(),
+            items,
+        })
     }
 
     pub fn view(&self, id: NodeId, parent_size: u64) -> NodeView {
@@ -333,6 +397,14 @@ pub struct ChildrenPage {
     pub items: Vec<NodeView>,
 }
 
+/// One page of file rows (the files of one category).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilesPage {
+    pub total: usize,
+    pub items: Vec<FileView>,
+}
+
 /// A file row with its full path (used by the "largest files" list).
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -340,6 +412,10 @@ pub struct FileView {
     #[serde(flatten)]
     pub node: NodeView,
     pub path: String,
+    /// Whether "Open file" is offered (not an executable, D-040). Set where the category
+    /// table is known; left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub openable: Option<bool>,
 }
 
 #[cfg(test)]
@@ -448,6 +524,52 @@ mod tests {
         let z = find(&t, b, "z.bin");
         let expected: PathBuf = ["root", "a", "b", "z.bin"].iter().collect();
         assert_eq!(t.path(z).unwrap(), expected);
+    }
+
+    #[test]
+    fn category_files_lists_only_that_category_below_the_node() {
+        let t = sample();
+        let cats = categories();
+        let doc = cats.id_of("document").unwrap();
+        let names = |page: FilesPage| -> Vec<String> {
+            page.items.into_iter().map(|f| f.node.name).collect()
+        };
+
+        let page = t
+            .category_files(NodeId::ROOT, doc, SortBy::Size, SortOrder::Desc, 0, 10)
+            .unwrap();
+        assert_eq!(page.total, 2);
+        assert!(
+            page.items[0].path.ends_with("y.txt"),
+            "{}",
+            page.items[0].path
+        );
+        assert_eq!(names(page), ["y.txt", "x.txt"]);
+
+        // Other sort, paging, and a subtree without matches.
+        let by_name = t
+            .category_files(NodeId::ROOT, doc, SortBy::Name, SortOrder::Asc, 1, 1)
+            .unwrap();
+        assert_eq!(
+            (by_name.total, names(by_name)),
+            (2, vec!["y.txt".to_string()])
+        );
+        let b = find(&t, find(&t, NodeId::ROOT, "a"), "b");
+        assert_eq!(
+            t.category_files(b, doc, SortBy::Size, SortOrder::Desc, 0, 10)
+                .unwrap()
+                .total,
+            0
+        );
+        let other = cats.id_of(super::super::category::OTHER_KEY).unwrap();
+        let rest = t
+            .category_files(NodeId::ROOT, other, SortBy::Size, SortOrder::Desc, 0, 10)
+            .unwrap();
+        assert_eq!(names(rest), ["z.bin"], "folders are never listed");
+        assert!(matches!(
+            t.category_files(NodeId(999), doc, SortBy::Size, SortOrder::Desc, 0, 10),
+            Err(ScanError::UnknownNode(999))
+        ));
     }
 
     #[test]

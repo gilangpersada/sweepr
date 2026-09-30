@@ -11,6 +11,7 @@ import { useI18n } from "./lib/i18n";
 import { Cleaner } from "./views/Cleaner";
 import { Home } from "./views/Home";
 import { RecycleBin } from "./views/RecycleBin";
+import { Scan } from "./views/Scan";
 import { ScanResult } from "./views/ScanResult";
 import { Settings } from "./views/Settings";
 
@@ -39,25 +40,25 @@ function App() {
   }, []);
 
   // Derived during render (no effect): leave the splash once, and open a new scan result when
-  // it arrives while the user waits on Home. On another page (e.g. the cleaner) they are not
-  // pulled away; the "Scan results" menu item becomes available instead.
+  // it arrives while the user waits on the Scan page. On another page (e.g. the cleaner) they
+  // are not pulled away; the "Scan results" menu item becomes available instead.
   if (!booted && minElapsed && drives.status === "done") setBooted(true);
   const result = state.status === "finished" ? state.result : null;
   if (result && result.scanId !== shownScanId) {
     setShownScanId(result.scanId);
-    if (page === "home") go("results");
+    if (page === "scan") go("results");
   }
 
-  // Starting a scan drops the previous result in the backend; show progress on Home.
+  // Starting a scan drops the previous result in the backend; show progress on Scan.
   const scan = useCallback(
     (path: string) => {
       void start(path);
-      go("home");
+      go("scan");
     },
     [start, go],
   );
 
-  const current = page === "results" && !result ? "home" : page;
+  const current = page === "results" && !result ? "scan" : page;
   const shows = (p: Page) => visited.has(p) || current === p;
 
   return (
@@ -87,12 +88,16 @@ function App() {
               drives={drives}
               scan={state}
               result={result}
-              onScan={scan}
-              onCancel={cancel}
-              onOpenResult={() => go("results")}
-              onOpenCleaner={() => go("cleaner")}
+              finishedAt={state.status === "finished" ? state.finishedAt : null}
+              active={current === "home"}
+              onNavigate={go}
             />
           </PageView>
+          {shows("scan") && (
+            <PageView active={current === "scan"}>
+              <Scan drives={drives} scan={state} onScan={scan} onCancel={cancel} />
+            </PageView>
+          )}
           {result && shows("results") && (
             <PageView active={current === "results"}>
               {/* Keyed by scan so a rescan starts at the root with fresh state. */}

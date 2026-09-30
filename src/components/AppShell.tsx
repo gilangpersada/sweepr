@@ -2,14 +2,15 @@ import { AnimatePresence, m } from "motion/react";
 import type { ReactNode } from "react";
 import type { ScanState } from "../hooks/useScan";
 import { useI18n } from "../lib/i18n";
-import { BroomIcon, ChartIcon, HomeIcon, SettingsIcon, TrashIcon } from "./icons";
+import { BroomIcon, ChartIcon, DriveIcon, HomeIcon, SettingsIcon, TrashIcon } from "./icons";
 import { Button } from "./ui/Button";
 import { ProgressBar } from "./ui/ProgressBar";
 
-export type Page = "home" | "results" | "cleaner" | "recycleBin" | "settings";
+export type Page = "home" | "scan" | "results" | "cleaner" | "recycleBin" | "settings";
 
 const MENU: { page: Page; icon: (p: { className?: string }) => ReactNode }[] = [
   { page: "home", icon: HomeIcon },
+  { page: "scan", icon: DriveIcon },
   { page: "results", icon: ChartIcon },
   { page: "cleaner", icon: BroomIcon },
   { page: "recycleBin", icon: TrashIcon },
@@ -26,14 +27,15 @@ interface Props {
   children: ReactNode;
 }
 
-/** Always-wide sidebar menu (icon + text, D-033) and the content area. */
+/** Always-wide sidebar menu (icon, name and a short hint of what is inside; D-033, D-038)
+ * and the content area. */
 export function AppShell({ page, onNavigate, hasResult, scan, onCancel, children }: Props) {
   const i18n = useI18n();
   const { t, fmt } = i18n;
 
   return (
     <div className="flex h-screen bg-canvas text-ink">
-      <aside className="flex w-52 shrink-0 flex-col gap-6 border-r-[3px] border-line bg-surface p-4">
+      <aside className="flex w-56 shrink-0 flex-col gap-6 overflow-y-auto border-r-[3px] border-line bg-surface p-4">
         <div className="flex gap-1" aria-hidden="true">
           {"SWEEPR".split("").map((ch, i) => (
             <span
@@ -55,16 +57,22 @@ export function AppShell({ page, onNavigate, hasResult, scan, onCancel, children
                 type="button"
                 disabled={disabled}
                 aria-current={selected ? "page" : undefined}
-                title={disabled ? t.nav.resultsHint : undefined}
                 onClick={() => onNavigate(target)}
-                className={`flex items-center gap-3 rounded-control border-2 px-3 py-2 text-left font-bold transition-[translate,box-shadow] duration-100 disabled:cursor-not-allowed disabled:opacity-45 ${
+                className={`flex items-center gap-3 rounded-control border-2 px-3 py-1.5 text-left transition-[translate,box-shadow] duration-100 disabled:cursor-not-allowed disabled:opacity-45 ${
                   selected
                     ? "border-line bg-primary text-on-accent shadow-hard-sm"
                     : "border-transparent enabled:hover:border-line enabled:hover:bg-sunken"
                 }`}
               >
                 <Icon className="size-5 shrink-0" />
-                {t.nav[target]}
+                <span className="min-w-0">
+                  <span className="block font-bold">{t.nav[target]}</span>
+                  <span
+                    className={`block text-xs leading-snug ${selected ? "text-on-accent" : "text-muted"}`}
+                  >
+                    {disabled ? t.nav.resultsHint : t.nav.hints[target]}
+                  </span>
+                </span>
               </button>
             );
           })}

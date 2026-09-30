@@ -135,7 +135,7 @@ export function ScanResult({ result, onRescan, active }: Props) {
             </div>
           ) : (
             <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-              <CategoryView scanId={scanId} nodeId={current.id} />
+              <CategoryView scanId={scanId} nodeId={current.id} notify={notify} />
             </div>
           )}
         </div>

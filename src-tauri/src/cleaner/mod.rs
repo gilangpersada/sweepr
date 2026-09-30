@@ -8,6 +8,7 @@
 
 mod log;
 mod matcher;
+mod recycle;
 mod rules;
 
 use std::collections::HashSet;
@@ -22,6 +23,7 @@ use serde::{Serialize, Serializer};
 use crate::platform::{self, RecycleLimit};
 use crate::safety::SafetyPolicy;
 use log::{ActionLog, LogEntry, LogWriter};
+pub use recycle::{BinListing, RecycleBin, RestoreResult};
 use rules::Rule;
 pub use rules::{Group, Risk, RuleError};
 
@@ -176,6 +178,14 @@ pub struct CleanupResult {
     pub items: Vec<ItemOutcome>,
 }
 
+/// What the rules that are checked by default would clean right now (Home, D-038).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupEstimate {
+    pub total_bytes: u64,
+    pub item_count: usize,
+}
+
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecycleBinInfo {
@@ -194,6 +204,13 @@ struct StoredItem {
     is_dir: bool,
     size: u64,
     fingerprint: matcher::Fingerprint,
+}
+
+/// Result of running rules, before it is stored as a preview (or thrown away).
+struct Built {
+    rules: Vec<StoredRule>,
+    items: Vec<StoredItem>,
+    out: Vec<RulePreview>,
 }
 
 struct StoredPreview {
@@ -276,7 +293,42 @@ impl Cleaner {
                 chosen.push(rule.clone());
             }
         }
+        let built = self.build(chosen)?;
 
+        let mut state = self.lock();
+        state.next_id += 1;
+        let preview_id = state.next_id;
+        state.preview = Some(StoredPreview {
+            id: preview_id,
+            created: Instant::now(),
+            rules: built.rules,
+            items: built.items,
+        });
+        Ok(CleanupPreview {
+            preview_id,
+            max_items: MAX_ITEMS,
+            rules: built.out,
+        })
+    }
+
+    /// Totals of the rules checked by default, computed exactly like a preview but not
+    /// stored: the one stored preview (open in the cleaner) stays valid.
+    pub fn estimate(&self) -> Result<CleanupEstimate, CleanerError> {
+        let chosen: Vec<Rule> = self
+            .rules()?
+            .iter()
+            .filter(|r| r.default_checked)
+            .cloned()
+            .collect();
+        let built = self.build(chosen)?;
+        Ok(CleanupEstimate {
+            total_bytes: built.out.iter().map(|r| r.total_bytes).sum(),
+            item_count: built.items.len(),
+        })
+    }
+
+    /// Finds and validates the candidates of the given rules (read-only).
+    fn build(&self, chosen: Vec<Rule>) -> Result<Built, CleanerError> {
         let now = now_secs();
         let mut stored_rules = Vec::new();
         let mut items = Vec::new();
@@ -344,20 +396,10 @@ impl Cleaner {
             });
             stored_rules.push(StoredRule { rule, roots });
         }
-
-        let mut state = self.lock();
-        state.next_id += 1;
-        let preview_id = state.next_id;
-        state.preview = Some(StoredPreview {
-            id: preview_id,
-            created: Instant::now(),
+        Ok(Built {
             rules: stored_rules,
             items,
-        });
-        Ok(CleanupPreview {
-            preview_id,
-            max_items: MAX_ITEMS,
-            rules: out,
+            out,
         })
     }
 

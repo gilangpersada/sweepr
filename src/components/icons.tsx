@@ -156,3 +156,22 @@ export function RefreshIcon(p: IconProps) {
     </Svg>
   );
 }
+
+export function UndoIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </Svg>
+  );
+}
+
+export function OpenIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="m10 13 4 2-4 2z" />
+    </Svg>
+  );
+}

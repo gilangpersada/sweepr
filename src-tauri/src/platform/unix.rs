@@ -64,3 +64,18 @@ pub fn recycle_bin_info() -> io::Result<(u64, u64)> {
 pub fn empty_recycle_bin() -> io::Result<()> {
     Err(io::Error::from(io::ErrorKind::Unsupported))
 }
+
+/// Recycle Bin items (their storage paths). Not supported here yet.
+pub fn recycle_bin_item_paths() -> io::Result<Vec<PathBuf>> {
+    Err(io::Error::from(io::ErrorKind::Unsupported))
+}
+
+/// Moves `from` to `to`, failing if `to` exists. Not supported here yet.
+pub fn move_no_replace(_from: &Path, _to: &Path) -> io::Result<()> {
+    Err(io::Error::from(io::ErrorKind::Unsupported))
+}
+
+/// Opens a file with its default app. Not supported here yet.
+pub fn open_with_default_app(_path: &Path) -> io::Result<()> {
+    Err(io::Error::from(io::ErrorKind::Unsupported))
+}

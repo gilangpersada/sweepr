@@ -35,7 +35,16 @@ export type ScanId = number;
 
 /** Error shape returned by scan commands and the `scan-failed` event. */
 export interface ScanError {
-  code: "notFound" | "notADirectory" | "isLink" | "io" | "unknownScan" | "unknownNode";
+  code:
+    | "notFound"
+    | "notADirectory"
+    | "isLink"
+    | "io"
+    | "unknownScan"
+    | "unknownNode"
+    | "unknownCategory"
+    | "notAFile"
+    | "executable";
   message: string;
 }
 
@@ -86,6 +95,8 @@ export interface ChildrenPage {
 
 export interface FileView extends NodeView {
   path: string;
+  /** Category file lists only: `false` for files that would run a program (D-040). */
+  openable?: boolean;
 }
 
 export type SortBy = "size" | "name" | "modified" | "fileCount";
@@ -143,6 +154,32 @@ export interface CategorySize {
 /** File size per category below a node (recursive), largest first. */
 export function getCategorySummary(scanId: ScanId, nodeId: number): Promise<CategorySize[]> {
   return invoke<CategorySize[]>("get_category_summary", { scanId, nodeId });
+}
+
+export interface FilesPage {
+  total: number;
+  items: FileView[];
+}
+
+/** Files of one category below a node (recursive), a page at a time (D-040). */
+export function getCategoryFiles(args: {
+  scanId: ScanId;
+  nodeId: number;
+  category: string;
+  sortBy: SortBy;
+  order: SortOrder;
+  offset: number;
+  limit: number;
+}): Promise<FilesPage> {
+  return invoke<FilesPage>("get_category_files", args);
+}
+
+/**
+ * Opens a scanned file with its default app. Sends the node id; the backend refuses folders
+ * and files that would run a program (code "executable").
+ */
+export function openFile(scanId: ScanId, nodeId: number): Promise<void> {
+  return invoke("open_file", { scanId, nodeId });
 }
 
 export interface SkippedPage {
@@ -256,6 +293,71 @@ export interface CleanupResult {
 export interface RecycleBinInfo {
   sizeBytes: number;
   itemCount: number;
+}
+
+/** What the rules checked by default would clean now. Does not replace the open preview. */
+export interface CleanupEstimate {
+  totalBytes: number;
+  itemCount: number;
+}
+
+// ---------- Recycle Bin contents (D-039) ----------
+
+export interface BinItem {
+  itemId: number;
+  /** Original name with extension. Display only, like every path here. */
+  name: string;
+  originalPath: string;
+  /** e.g. "C:". */
+  drive: string;
+  size: number;
+  isDir: boolean;
+  /** Unix seconds. */
+  deleted: number;
+}
+
+export interface BinDrive {
+  drive: string;
+  size: number;
+  itemCount: number;
+}
+
+export interface BinListing {
+  listId: number;
+  /** Newest first. */
+  items: BinItem[];
+  drives: BinDrive[];
+  unreadableCount: number;
+  maxItems: number;
+}
+
+export interface RestoreOutcome {
+  itemId: number;
+  path: string;
+  size: number;
+  /** `null` when the item is back at its original location. */
+  error: FailReason | null;
+}
+
+export interface RestoreResult {
+  listId: number;
+  restoredCount: number;
+  restoredBytes: number;
+  failedCount: number;
+  items: RestoreOutcome[];
+}
+
+export function listRecycleBin(): Promise<BinListing> {
+  return invoke<BinListing>("list_recycle_bin");
+}
+
+/** Moves items of a list back to where they were deleted from; never replaces anything. */
+export function restoreFromRecycleBin(listId: number, itemIds: number[]): Promise<RestoreResult> {
+  return invoke<RestoreResult>("restore_from_recycle_bin", { listId, itemIds });
+}
+
+export function estimateCleanup(): Promise<CleanupEstimate> {
+  return invoke<CleanupEstimate>("estimate_cleanup");
 }
 
 export function listCleanerRules(): Promise<RuleInfo[]> {

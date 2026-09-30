@@ -20,7 +20,12 @@ export type ScanState =
       scanId: ScanId | null;
       progress: ScanProgressEvent | null;
     }
-  | { status: "finished"; result: ScanFinishedEvent }
+  | {
+      status: "finished";
+      result: ScanFinishedEvent;
+      /** When the result arrived, unix ms (for "10 minutes ago"). */
+      finishedAt: number;
+    }
   | { status: "cancelled" }
   | { status: "failed"; error: ScanError };
 
@@ -32,7 +37,7 @@ type FinalEvent =
 function toState(f: FinalEvent): ScanState {
   switch (f.kind) {
     case "finished":
-      return { status: "finished", result: f.e };
+      return { status: "finished", result: f.e, finishedAt: Date.now() };
     case "cancelled":
       return { status: "cancelled" };
     case "failed":

@@ -13,11 +13,14 @@ export interface Formatters {
   percent: (pct: number) => string;
   /** Milliseconds -> seconds with one decimal, e.g. 13100 -> "13,1". */
   seconds: (ms: number) => string;
+  /** Time since a moment (unix milliseconds): "10 menit yang lalu" / "10 minutes ago". */
+  ago: (unixMs: number, now?: number) => string;
 }
 
 export function makeFormatters(locale: string): Formatters {
   const number = (n: number, digits: number) =>
     n.toLocaleString(locale, { maximumFractionDigits: digits });
+  const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const dateFmt = new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
@@ -39,5 +42,16 @@ export function makeFormatters(locale: string): Formatters {
     date: (s) => (s === null ? "—" : dateFmt.format(new Date(s * 1000))),
     percent: (pct) => (pct > 0 && pct < 0.1 ? `<${number(0.1, 1)}%` : `${number(pct, 1)}%`),
     seconds: (ms) => number(ms / 1000, 1),
+    ago(unixMs, now = Date.now()) {
+      const secs = Math.max(0, Math.round((now - unixMs) / 1000));
+      if (secs < 45) return relative.format(0, "second");
+      const [value, unit]: [number, Intl.RelativeTimeFormatUnit] =
+        secs < 3600
+          ? [Math.round(secs / 60), "minute"]
+          : secs < 86_400
+            ? [Math.round(secs / 3600), "hour"]
+            : [Math.round(secs / 86_400), "day"];
+      return relative.format(-value, unit);
+    },
   };
 }

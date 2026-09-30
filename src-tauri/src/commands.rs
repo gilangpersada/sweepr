@@ -7,13 +7,14 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
 use crate::cleaner::{
-    Cleaner, CleanerError, CleanupPreview, CleanupResult, RecycleBinInfo, RuleInfo,
+    BinListing, Cleaner, CleanerError, CleanupEstimate, CleanupPreview, CleanupResult, RecycleBin,
+    RecycleBinInfo, RestoreResult, RuleInfo,
 };
 use crate::drives::{self, DriveInfo};
 use crate::platform;
 use crate::scanner::{
-    CategorySize, ChildrenPage, FileView, NodeId, ScanError, ScanEvent, ScanId, ScanSessions,
-    SkippedPage, SortBy, SortOrder,
+    CategorySize, ChildrenPage, FileView, FilesPage, NodeId, ScanError, ScanEvent, ScanId,
+    ScanSessions, SkippedPage, SortBy, SortOrder,
 };
 
 /// Upper bound for page sizes requested by the UI, so one call never ships a huge payload.
@@ -116,6 +117,51 @@ pub async fn get_category_summary(
         .category_summary(NodeId(node_id), &result.categories)
 }
 
+/// Files of one category below a node, a page at a time (D-040).
+#[tauri::command]
+#[allow(clippy::too_many_arguments)] // one flat command, mirrors `get_children`
+pub async fn get_category_files(
+    sessions: State<'_, ScanSessions>,
+    scan_id: ScanId,
+    node_id: u32,
+    category: String,
+    sort_by: SortBy,
+    order: SortOrder,
+    offset: usize,
+    limit: usize,
+) -> Result<FilesPage, ScanError> {
+    let result = sessions.result(scan_id)?;
+    let id = result
+        .categories
+        .id_of(&category)
+        .ok_or(ScanError::UnknownCategory(category))?;
+    let mut page = result.tree.category_files(
+        NodeId(node_id),
+        id,
+        sort_by,
+        order,
+        offset,
+        limit.min(MAX_PAGE),
+    )?;
+    for f in &mut page.items {
+        f.openable = Some(!result.categories.is_executable(f.node.name.as_ref()));
+    }
+    Ok(page)
+}
+
+/// Opens a scanned file with its default app. Takes a node id, never a path. Files that
+/// would run a program (`executable_extensions` in the config) are refused (D-040).
+#[tauri::command]
+pub async fn open_file(
+    sessions: State<'_, ScanSessions>,
+    scan_id: ScanId,
+    node_id: u32,
+) -> Result<(), ScanError> {
+    let result = sessions.result(scan_id)?;
+    let path = result.openable_path(NodeId(node_id))?;
+    platform::open_file(&path).map_err(|e| ScanError::from_io(path, e))
+}
+
 /// Full path of a node, for "copy path". Display only; never accepted back as input.
 #[tauri::command]
 pub fn get_node_path(
@@ -167,6 +213,14 @@ pub async fn execute_cleanup(
     blocking(&cleaner, move |c| c.execute(preview_id, &item_ids)).await
 }
 
+/// What the default rules would clean now, without replacing the cleaner's preview.
+#[tauri::command]
+pub async fn estimate_cleanup(
+    cleaner: State<'_, Arc<Cleaner>>,
+) -> Result<CleanupEstimate, CleanerError> {
+    blocking(&cleaner, |c| c.estimate()).await
+}
+
 #[tauri::command]
 pub async fn get_recycle_bin_info(
     cleaner: State<'_, Arc<Cleaner>>,
@@ -180,13 +234,32 @@ pub async fn empty_recycle_bin(cleaner: State<'_, Arc<Cleaner>>) -> Result<(), C
     blocking(&cleaner, |c| c.empty_recycle_bin()).await
 }
 
+// ---------- Recycle Bin contents (D-039) ----------
+// Same pattern as the cleaner: the UI gets a list id and item ids, never sends paths.
+
+/// Lists the Recycle Bin of all drives, replacing the previous list.
+#[tauri::command]
+pub async fn list_recycle_bin(bin: State<'_, Arc<RecycleBin>>) -> Result<BinListing, CleanerError> {
+    blocking(&bin, |b| b.list()).await
+}
+
+/// Moves the chosen items back to their original location; never replaces anything.
+#[tauri::command]
+pub async fn restore_from_recycle_bin(
+    bin: State<'_, Arc<RecycleBin>>,
+    list_id: u64,
+    item_ids: Vec<u32>,
+) -> Result<RestoreResult, CleanerError> {
+    blocking(&bin, move |b| b.restore(list_id, &item_ids)).await
+}
+
 /// Runs slow file-system work on Tauri's blocking pool instead of an async worker.
-async fn blocking<T: Send + 'static>(
-    cleaner: &Arc<Cleaner>,
-    f: impl FnOnce(&Cleaner) -> Result<T, CleanerError> + Send + 'static,
+async fn blocking<S: Send + Sync + 'static, T: Send + 'static>(
+    state: &Arc<S>,
+    f: impl FnOnce(&S) -> Result<T, CleanerError> + Send + 'static,
 ) -> Result<T, CleanerError> {
-    let cleaner = Arc::clone(cleaner);
-    tauri::async_runtime::spawn_blocking(move || f(&cleaner))
+    let state = Arc::clone(state);
+    tauri::async_runtime::spawn_blocking(move || f(&state))
         .await
         .map_err(|e| CleanerError::Internal(e.to_string()))?
 }

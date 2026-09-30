@@ -34,6 +34,7 @@ pub fn run() {
         .setup(|app| {
             // Log of every cleaner action (JSON lines), in the app's own log folder.
             let log_path = app.path().app_log_dir()?.join("cleanup.jsonl");
+            app.manage(Arc::new(cleaner::RecycleBin::for_app(log_path.clone())));
             app.manage(Arc::new(cleaner::Cleaner::for_app(log_path)));
             Ok(())
         })
@@ -45,12 +46,17 @@ pub fn run() {
             commands::get_children,
             commands::get_largest_files,
             commands::get_category_summary,
+            commands::get_category_files,
+            commands::open_file,
             commands::get_node_path,
             commands::get_skipped,
             commands::reveal_in_explorer,
             commands::list_cleaner_rules,
             commands::preview_cleanup,
             commands::execute_cleanup,
+            commands::estimate_cleanup,
+            commands::list_recycle_bin,
+            commands::restore_from_recycle_bin,
             commands::get_recycle_bin_info,
             commands::empty_recycle_bin,
         ])

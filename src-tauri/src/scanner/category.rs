@@ -3,7 +3,7 @@
 //!
 //! Each file stores only a 1-byte `CategoryId`; the names live once in `Categories`.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ffi::OsStr;
 use std::path::Path;
 
@@ -26,6 +26,8 @@ pub struct Categories {
     names: Vec<String>,
     /// Lowercased extension without the dot -> category.
     by_ext: HashMap<String, CategoryId>,
+    /// Lowercased extensions (without the dot) that run a program when opened (D-040).
+    executables: HashSet<String>,
 }
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -38,6 +40,8 @@ pub enum CategoryConfigError {
     TooMany,
     #[error("extension {ext:?} in category {category:?} must look like \".mp4\"")]
     BadExtension { category: String, ext: String },
+    #[error("executable extension {0:?} must look like \".exe\"")]
+    BadExecutable(String),
     #[error("extension {ext:?} is listed in both {first:?} and {second:?}")]
     Duplicate {
         ext: String,
@@ -51,6 +55,8 @@ pub enum CategoryConfigError {
 struct RulesFile {
     #[serde(default)]
     category_extensions: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    executable_extensions: Vec<String>,
 }
 
 impl Categories {
@@ -58,7 +64,12 @@ impl Categories {
     pub fn from_rules_json(json: &str) -> Result<Self, CategoryConfigError> {
         let file: RulesFile =
             serde_json::from_str(json).map_err(|e| CategoryConfigError::Json(e.to_string()))?;
-        Self::from_map(file.category_extensions)
+        let mut categories = Self::from_map(file.category_extensions)?;
+        for ext in file.executable_extensions {
+            let key = ext_key(&ext).ok_or(CategoryConfigError::BadExecutable(ext))?;
+            categories.executables.insert(key);
+        }
+        Ok(categories)
     }
 
     fn from_map(map: BTreeMap<String, Vec<String>>) -> Result<Self, CategoryConfigError> {
@@ -73,16 +84,11 @@ impl Categories {
             }
             let id = CategoryId(u8::try_from(i + 1).expect("checked above"));
             for ext in exts {
-                let key = match ext.strip_prefix('.') {
-                    Some(rest) if !rest.is_empty() && !rest.contains(['.', '/', '\\']) => {
-                        rest.to_lowercase()
-                    }
-                    _ => {
-                        return Err(CategoryConfigError::BadExtension {
-                            category: name,
-                            ext,
-                        })
-                    }
+                let Some(key) = ext_key(&ext) else {
+                    return Err(CategoryConfigError::BadExtension {
+                        category: name,
+                        ext,
+                    });
                 };
                 if let Some(prev) = by_ext.insert(key, id) {
                     // Q5 (M2): an extension may belong to one category only.
@@ -98,7 +104,11 @@ impl Categories {
             }
             names.push(name);
         }
-        Ok(Categories { names, by_ext })
+        Ok(Categories {
+            names,
+            by_ext,
+            executables: HashSet::new(),
+        })
     }
 
     /// Category of a file by its extension (case-insensitive).
@@ -112,6 +122,23 @@ impl Categories {
             .and_then(|ext| self.by_ext.get(&ext.to_lowercase()))
             .copied()
             .unwrap_or(CategoryId::OTHER)
+    }
+
+    /// Id of a category by its config key (e.g. "video", or `OTHER_KEY`).
+    pub fn id_of(&self, key: &str) -> Option<CategoryId> {
+        if key == OTHER_KEY {
+            return Some(CategoryId::OTHER);
+        }
+        let i = self.names.iter().position(|n| n == key)?;
+        u8::try_from(i + 1).ok().map(CategoryId)
+    }
+
+    /// Whether opening this file would run a program (listed in `executable_extensions`).
+    pub fn is_executable(&self, file_name: &OsStr) -> bool {
+        Path::new(file_name)
+            .extension()
+            .and_then(OsStr::to_str)
+            .is_some_and(|ext| self.executables.contains(&ext.to_lowercase()))
     }
 
     /// Config key of a category (e.g. "video"), or `OTHER_KEY`.
@@ -128,6 +155,16 @@ impl Categories {
     /// Number of ids in use, including `OTHER`.
     pub fn id_count(&self) -> usize {
         self.names.len() + 1
+    }
+}
+
+/// ".MP4" -> "mp4"; `None` unless it is a single extension with a leading dot.
+fn ext_key(ext: &str) -> Option<String> {
+    match ext.strip_prefix('.') {
+        Some(rest) if !rest.is_empty() && !rest.contains(['.', '/', '\\']) => {
+            Some(rest.to_lowercase())
+        }
+        _ => None,
     }
 }
 
@@ -201,6 +238,30 @@ mod tests {
         assert!(matches!(
             Categories::from_rules_json("not json"),
             Err(CategoryConfigError::Json(_))
+        ));
+    }
+
+    #[test]
+    fn category_ids_by_key() {
+        let c = Categories::from_rules_json(RULES).unwrap();
+        assert_eq!(c.id_of(OTHER_KEY), Some(CategoryId::OTHER));
+        let video = c.id_of("video").unwrap();
+        assert_eq!(c.key(video), "video");
+        assert_eq!(c.id_of("nope"), None);
+    }
+
+    #[test]
+    fn executables_are_recognized_case_insensitively() {
+        let json = r#"{ "executable_extensions": [".exe", ".BAT"] }"#;
+        let c = Categories::from_rules_json(json).unwrap();
+        assert!(c.is_executable(OsStr::new("setup.EXE")));
+        assert!(c.is_executable(OsStr::new("run.bat")));
+        assert!(!c.is_executable(OsStr::new("movie.mp4")));
+        assert!(!c.is_executable(OsStr::new("exe")), "no extension");
+        let bad = r#"{ "executable_extensions": ["exe"] }"#;
+        assert!(matches!(
+            Categories::from_rules_json(bad),
+            Err(CategoryConfigError::BadExecutable(_))
         ));
     }
 

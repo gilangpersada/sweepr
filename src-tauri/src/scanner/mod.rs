@@ -10,7 +10,7 @@ mod walk;
 pub use category::{Categories, CategoryConfigError, CategorySize};
 pub use error::ScanError;
 pub use session::{ScanEvent, ScanId, ScanSessions};
-pub use tree::{ChildrenPage, FileView, NodeId, SortBy, SortOrder};
+pub use tree::{ChildrenPage, FileView, FilesPage, NodeId, SortBy, SortOrder};
 pub use walk::{scan, Progress, ScanOptions, ScanOutcome, ScanResult, SkippedPage};
 
 #[cfg(test)]
