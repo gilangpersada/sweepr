@@ -13,8 +13,9 @@ interface Props {
   notify: (message: string) => void;
 }
 
+// No shadow here: hundreds of rows would get noisy. The border shows on hover and focus.
 const BUTTON =
-  "rounded p-1.5 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:hover:bg-zinc-700 dark:hover:text-zinc-100";
+  "rounded-sm border-2 border-transparent p-1 text-muted hover:border-line hover:bg-primary hover:text-on-accent";
 
 export function RowActions({ scanId, nodeId, path, notify }: Props) {
   const { t } = useI18n();

@@ -1,17 +1,19 @@
+import { m } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CleanupResultView } from "../components/CleanupResultView";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { RecycleBinPanel } from "../components/RecycleBinPanel";
+import { RefreshIcon, TrashIcon } from "../components/icons";
 import { RuleCard } from "../components/RuleCard";
 import { EmptyState, ErrorState, LoadingState } from "../components/states";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { SECTION_TITLE } from "../components/ui/styles";
 import {
   executeCleanup,
-  getRecycleBinInfo,
   listCleanerRules,
   previewCleanup,
   type CleanupPreview,
   type CleanupResult,
-  type RecycleBinInfo,
   type RuleGroup,
   type RulePreview,
 } from "../lib/api";
@@ -50,11 +52,7 @@ async function loadPreview(): Promise<View> {
   }
 }
 
-interface Props {
-  onBack: () => void;
-}
-
-export function Cleaner({ onBack }: Props) {
+export function Cleaner() {
   const i18n = useI18n();
   const { t, fmt } = i18n;
   const [view, setView] = useState<View>({ kind: "loading" });
@@ -62,24 +60,15 @@ export function Cleaner({ onBack }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [bin, setBin] = useState<RecycleBinInfo | null>(null);
 
   const showPreview = useCallback((v: View) => {
     if (v.kind === "ready") setSelected(defaultSelection(v.preview));
     setView(v);
   }, []);
 
-  const refreshBin = useCallback(() => {
-    getRecycleBinInfo().then(setBin, () => setBin(null));
-  }, []);
-
   useEffect(() => {
     let alive = true;
     loadPreview().then((v) => alive && showPreview(v));
-    getRecycleBinInfo().then(
-      (info) => alive && setBin(info),
-      () => alive && setBin(null),
-    );
     return () => {
       alive = false;
     };
@@ -128,7 +117,6 @@ export function Cleaner({ onBack }: Props) {
       const result = await executeCleanup(preview.previewId, [...selected]);
       setConfirming(false);
       setView({ kind: "done", result });
-      refreshBin();
     } catch (e) {
       setConfirming(false);
       setNotice(errorMessage(t, e));
@@ -139,110 +127,103 @@ export function Cleaner({ onBack }: Props) {
     }
   }
 
+  // Rule cards appear one after another across both groups.
+  let cardIndex = 0;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center gap-6 border-b border-zinc-200 px-6 py-3 dark:border-zinc-700">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
-          {t.common.back}
-        </button>
-        <h1 className="flex-1 font-semibold">{t.cleaner.title}</h1>
-        <button
-          type="button"
-          onClick={reload}
-          disabled={view.kind === "loading" || busy}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        >
+      <header className="flex items-center gap-6 border-b-[3px] border-line bg-surface px-6 py-4">
+        <h1 className="flex-1 text-xl font-bold">{t.cleaner.title}</h1>
+        <Button icon={<RefreshIcon />} onClick={reload} disabled={view.kind === "loading" || busy}>
           {t.cleaner.reload}
-        </button>
+        </Button>
       </header>
 
-      <div className="mx-auto w-full max-w-4xl flex-1 space-y-4 overflow-y-auto p-6">
-        <RecycleBinPanel info={bin} onChanged={refreshBin} />
-        {notice && (
-          <p
-            role="alert"
-            className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-          >
-            {notice}
-          </p>
-        )}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
+          {notice && (
+            <Card tone="primary" shadow="sm" role="alert" className="p-3 text-sm font-medium">
+              {notice}
+            </Card>
+          )}
 
-        {view.kind === "loading" && <LoadingState text={t.cleaner.searching} />}
-        {view.kind === "error" && (
-          <ErrorState message={errorMessage(t, view.error)} onRetry={reload} />
-        )}
-        {view.kind === "done" && <CleanupResultView result={view.result} onDone={reload} />}
-        {nothingFound && <EmptyState text={t.cleaner.nothingFound} />}
-        {preview &&
-          GROUPS.map((group) => {
-            const rules = preview.rules.filter((r) => r.group === group);
-            if (rules.length === 0) return null;
-            const { title, hint } = groupText(t, group);
-            return (
-              <section key={group} aria-labelledby={`group-${group}`} className="space-y-3">
-                <div>
-                  <h2
-                    id={`group-${group}`}
-                    className="text-sm font-semibold uppercase tracking-wide text-zinc-500"
-                  >
-                    {title}
-                  </h2>
-                  {hint && <p className="text-sm text-zinc-600 dark:text-zinc-400">{hint}</p>}
-                </div>
-                {rules.map((rule) => (
-                  <RuleCard
-                    key={rule.id}
-                    rule={rule}
-                    selected={selected}
-                    onToggleRule={toggleRule}
-                    onToggleItem={toggleItem}
-                  />
-                ))}
-              </section>
-            );
-          })}
+          {view.kind === "loading" && <LoadingState text={t.cleaner.searching} />}
+          {view.kind === "error" && (
+            <ErrorState message={errorMessage(t, view.error)} onRetry={reload} />
+          )}
+          {view.kind === "done" && <CleanupResultView result={view.result} onDone={reload} />}
+          {nothingFound && <EmptyState text={t.cleaner.nothingFound} />}
+          {preview &&
+            GROUPS.map((group) => {
+              const rules = preview.rules.filter((r) => r.group === group);
+              if (rules.length === 0) return null;
+              const { title, hint } = groupText(t, group);
+              return (
+                <section key={group} aria-labelledby={`group-${group}`} className="space-y-4">
+                  <div>
+                    <h2 id={`group-${group}`} className={SECTION_TITLE}>
+                      {title}
+                    </h2>
+                    {hint && <p className="text-sm text-muted">{hint}</p>}
+                  </div>
+                  {rules.map((rule) => (
+                    <m.div
+                      key={rule.id}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: cardIndex++ * 0.06, duration: 0.25, ease: "easeOut" }}
+                    >
+                      <RuleCard
+                        rule={rule}
+                        selected={selected}
+                        onToggleRule={toggleRule}
+                        onToggleItem={toggleItem}
+                      />
+                    </m.div>
+                  ))}
+                </section>
+              );
+            })}
+        </div>
       </div>
 
       {preview && (
-        <footer className="flex flex-wrap items-center gap-4 border-t border-zinc-200 px-6 py-3 dark:border-zinc-700">
+        <footer className="flex flex-wrap items-center gap-4 border-t-[3px] border-line bg-surface px-6 py-3">
           <div className="flex-1 text-sm">
             {t.cleaner.selected}{" "}
-            <span className="font-semibold tabular-nums">
+            <span className="font-mono font-bold">
               {selectedItems} · {fmt.bytes(selectedBytes)}
             </span>
             {tooMany && (
-              <span className="ml-2 text-red-600 dark:text-red-400">
+              <span className="ml-2 font-bold text-danger-ink">
                 {t.cleaner.tooMany(fmt.count(preview.maxItems))}
               </span>
             )}
           </div>
-          <button
-            type="button"
+          <Button
+            variant="primary"
             disabled={selected.size === 0 || tooMany || busy}
             onClick={() => setConfirming(true)}
-            className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {t.cleaner.next}
-          </button>
+          </Button>
         </footer>
       )}
 
       <ConfirmDialog
         open={confirming}
         title={t.cleaner.confirmTitle}
+        tone="danger"
+        confirmIcon={<TrashIcon />}
         confirmLabel={t.cleaner.confirmButton}
         busy={busy}
         onConfirm={() => void execute()}
         onCancel={() => setConfirming(false)}
       >
-        <p className="font-medium">
+        <p className="font-bold">
           {t.cleaner.confirmLead(selectedItems, fmt.bytes(selectedBytes))}
         </p>
-        <p>{t.cleaner.confirmNote}</p>
+        <p className="text-muted">{t.cleaner.confirmNote}</p>
       </ConfirmDialog>
     </div>
   );

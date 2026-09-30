@@ -1,5 +1,6 @@
 import { useI18n } from "../lib/i18n";
 import { ArrowUpIcon } from "./icons";
+import { Button } from "./ui/Button";
 
 export interface Crumb {
   id: number;
@@ -16,30 +17,36 @@ export function Breadcrumb({ trail, onNavigate }: Props) {
   const { t } = useI18n();
   const last = trail.length - 1;
   return (
-    <nav aria-label={t.breadcrumb.label} className="flex min-w-0 items-center gap-2">
-      <button
-        type="button"
+    <nav aria-label={t.breadcrumb.label} className="flex min-w-0 items-center gap-3">
+      <Button
+        size="icon"
         disabled={last === 0}
         onClick={() => onNavigate(last - 1)}
         title={t.breadcrumb.upHint}
-        className="shrink-0 rounded-md border border-zinc-300 p-1.5 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
       >
         <ArrowUpIcon />
         <span className="sr-only">{t.breadcrumb.up}</span>
-      </button>
-      <ol className="flex min-w-0 flex-wrap items-center text-sm">
+      </Button>
+      <ol className="flex min-w-0 flex-wrap items-center gap-y-1 text-sm">
         {trail.map((c, i) => (
           <li key={c.id} className="flex min-w-0 items-center">
-            {i > 0 && <span className="px-1 text-zinc-400">›</span>}
+            {i > 0 && (
+              <span aria-hidden="true" className="px-1.5 font-bold text-muted">
+                /
+              </span>
+            )}
             {i === last ? (
-              <span aria-current="page" className="truncate font-medium">
+              <span
+                aria-current="page"
+                className="truncate rounded-sm border-2 border-line bg-primary px-1.5 font-bold text-on-accent"
+              >
                 {c.name}
               </span>
             ) : (
               <button
                 type="button"
                 onClick={() => onNavigate(i)}
-                className="truncate text-blue-600 hover:underline dark:text-blue-400"
+                className="truncate rounded-sm border-2 border-transparent px-1.5 font-medium hover:border-line hover:bg-sunken"
               >
                 {c.name}
               </button>

@@ -1,28 +1,32 @@
+import { AnimatePresence, m } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Breadcrumb, type Crumb } from "../components/Breadcrumb";
-import { CategoryBar } from "../components/CategoryBar";
+import { CategoryView } from "../components/CategoryView";
 import { FolderTable, type Sort } from "../components/FolderTable";
+import { RefreshIcon } from "../components/icons";
 import { LargestFiles } from "../components/LargestFiles";
 import { SkippedDialog } from "../components/SkippedDialog";
+import { Button } from "../components/ui/Button";
+import { CountUp } from "../components/ui/CountUp";
+import { Tabs } from "../components/ui/Tabs";
 import type { NodeView, ScanFinishedEvent } from "../lib/api";
 import { countOf, useI18n } from "../lib/i18n";
 
 interface Props {
   result: ScanFinishedEvent;
-  onHome: () => void;
   onRescan: (path: string) => void;
-  onOpenCleaner: () => void;
-  /** False while another page covers this one; disables keyboard shortcuts. */
+  /** False while another page is shown; disables keyboard shortcuts. */
   active: boolean;
 }
 
-type Tab = "folders" | "largest";
+type Tab = "folders" | "largest" | "categories";
 
 const TOAST_MS = 2500;
-const HEADER_BUTTON =
-  "rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800";
+/** Bordered frame around the tables. */
+const TABLE_FRAME =
+  "flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-card border-2 border-b-0 border-line bg-surface";
 
-export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: Props) {
+export function ScanResult({ result, onRescan, active }: Props) {
   const i18n = useI18n();
   const { t, fmt } = i18n;
   const { scanId, rootId, rootPath } = result;
@@ -45,10 +49,11 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
   const open = useCallback((node: NodeView) => {
     setTrail((t) => [...t, { id: node.id, name: node.name }]);
   }, []);
+  const navigate = (i: number) => setTrail((t) => t.slice(0, i + 1));
 
   // Backspace goes up one folder, like Explorer.
   useEffect(() => {
-    if (tab !== "folders" || !active || showSkipped) return;
+    if (tab === "largest" || !active || showSkipped) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (e.key !== "Backspace" || target?.closest("input, textarea")) return;
@@ -59,29 +64,18 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
     return () => window.removeEventListener("keydown", onKey);
   }, [tab, active, showSkipped]);
 
-  const tabClass = (which: Tab) =>
-    `border-b-2 px-3 py-2 text-sm font-medium ${
-      tab === which
-        ? "border-blue-600 text-blue-600 dark:text-blue-400"
-        : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-    }`;
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-zinc-200 px-6 py-3 dark:border-zinc-700">
-        <button
-          type="button"
-          onClick={onHome}
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
-          {t.result.home}
-        </button>
+      <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b-[3px] border-line bg-surface px-6 py-4">
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold" title={rootPath}>
+          <h1 className="truncate text-xl font-bold" title={rootPath}>
             {rootPath}
-          </div>
-          <div className="text-xs tabular-nums text-zinc-500">
-            {fmt.bytes(result.totalBytes)} · {countOf(i18n, result.totalFiles, t.units.files)} ·{" "}
+          </h1>
+          <div className="font-mono text-xs text-muted">
+            <span className="font-bold text-ink">
+              <CountUp value={result.totalBytes} format={fmt.bytes} />
+            </span>{" "}
+            · {countOf(i18n, result.totalFiles, t.units.files)} ·{" "}
             {t.result.finishedIn(fmt.seconds(result.elapsedMs))}
             {result.skippedCount > 0 && (
               <>
@@ -92,7 +86,7 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
                 <button
                   type="button"
                   onClick={() => setShowSkipped(true)}
-                  className="text-blue-600 hover:underline dark:text-blue-400"
+                  className="font-sans font-bold text-info-ink underline underline-offset-2"
                 >
                   {t.result.showList}
                 </button>
@@ -100,68 +94,69 @@ export function ScanResult({ result, onHome, onRescan, onOpenCleaner, active }: 
             )}
           </div>
         </div>
-        <button type="button" onClick={() => onRescan(rootPath)} className={HEADER_BUTTON}>
+        <Button icon={<RefreshIcon />} onClick={() => onRescan(rootPath)}>
           {t.result.rescan}
-        </button>
-        <button type="button" onClick={onOpenCleaner} className={HEADER_BUTTON}>
-          {t.result.cleaner}
-        </button>
+        </Button>
       </header>
 
-      <div role="tablist" className="flex gap-2 border-b border-zinc-200 px-6 dark:border-zinc-700">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "folders"}
-          onClick={() => setTab("folders")}
-          className={tabClass("folders")}
-        >
-          {t.result.tabFolders}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "largest"}
-          onClick={() => setTab("largest")}
-          className={tabClass("largest")}
-        >
-          {t.result.tabLargest}
-        </button>
+      <div className="px-6 pt-4">
+        <Tabs
+          label={t.result.tabsLabel}
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: "folders", label: t.result.tabFolders },
+            { id: "largest", label: t.result.tabLargest },
+            { id: "categories", label: t.result.tabCategories },
+          ]}
+        />
       </div>
 
-      {tab === "folders" ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 px-6 pt-4">
-          <Breadcrumb trail={trail} onNavigate={(i) => setTrail((t) => t.slice(0, i + 1))} />
-          <CategoryBar scanId={scanId} nodeId={current.id} />
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-lg border border-b-0 border-zinc-200 dark:border-zinc-700">
-            <FolderTable
-              scanId={scanId}
-              nodeId={current.id}
-              sort={sort}
-              onSortChange={setSort}
-              onOpen={open}
-              notify={notify}
-            />
-          </div>
-        </div>
-      ) : (
+      {tab === "largest" ? (
         <div className="flex min-h-0 flex-1 flex-col px-6 pt-4">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-lg border border-b-0 border-zinc-200 dark:border-zinc-700">
+          <div className={TABLE_FRAME}>
             <LargestFiles scanId={scanId} notify={notify} />
           </div>
         </div>
-      )}
-
-      {showSkipped && <SkippedDialog scanId={scanId} onClose={() => setShowSkipped(false)} />}
-
-      {toast && (
-        <div
-          role="status"
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-md bg-zinc-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          {toast}
+      ) : (
+        // Folders and Categories share the folder position (breadcrumb).
+        <div className="flex min-h-0 flex-1 flex-col gap-4 px-6 pt-4">
+          <Breadcrumb trail={trail} onNavigate={navigate} />
+          {tab === "folders" ? (
+            <div className={`@container ${TABLE_FRAME}`}>
+              <FolderTable
+                scanId={scanId}
+                nodeId={current.id}
+                sort={sort}
+                onSortChange={setSort}
+                onOpen={open}
+                notify={notify}
+              />
+            </div>
+          ) : (
+            <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+              <CategoryView scanId={scanId} nodeId={current.id} />
+            </div>
+          )}
         </div>
       )}
+
+      <SkippedDialog open={showSkipped} scanId={scanId} onClose={() => setShowSkipped(false)} />
+
+      <AnimatePresence>
+        {toast && (
+          <m.div
+            key="toast"
+            role="status"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-control border-2 border-line bg-primary px-4 py-2 text-sm font-bold text-on-accent shadow-hard"
+          >
+            {toast}
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

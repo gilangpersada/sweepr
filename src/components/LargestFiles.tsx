@@ -33,7 +33,7 @@ export function LargestFiles({ scanId, notify }: Props) {
   const header = (
     <div
       role="row"
-      className={`${GRID} h-9 border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800`}
+      className={`${GRID} h-9 border-b-2 border-line bg-sunken text-xs font-bold uppercase tracking-wide`}
     >
       <div role="columnheader" className="text-right">
         #
@@ -58,27 +58,25 @@ export function LargestFiles({ scanId, notify }: Props) {
       renderRow={(i) => {
         const f = files[i];
         return (
-          <div
-            className={`${GRID} h-full border-b border-zinc-100 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/60`}
-          >
-            <div role="cell" className="text-right text-xs tabular-nums text-zinc-400">
+          <div className={`${GRID} h-full border-b border-line/15 text-sm hover:bg-primary-soft`}>
+            <div role="cell" className="text-right font-mono text-xs text-muted">
               {i + 1}
             </div>
             <div role="cell" className="flex min-w-0 items-center gap-2">
-              <FileIcon className="size-4 shrink-0 text-zinc-400" />
+              <FileIcon className="size-4 shrink-0 text-muted" />
               <div className="min-w-0">
-                <div className="truncate" title={f.name}>
+                <div className="truncate font-medium" title={f.name}>
                   {f.name}
                 </div>
-                <div className="truncate text-xs text-zinc-500" title={f.path} dir="rtl">
+                <div className="truncate font-mono text-xs text-muted" title={f.path} dir="rtl">
                   <bdi>{f.path}</bdi>
                 </div>
               </div>
             </div>
-            <div role="cell" className="text-right tabular-nums">
+            <div role="cell" className="text-right font-mono text-xs font-bold">
               {fmt.bytes(f.size)}
             </div>
-            <div role="cell" className="text-zinc-600 dark:text-zinc-400">
+            <div role="cell" className="text-xs text-muted">
               {fmt.date(f.modified)}
             </div>
             <div role="cell">

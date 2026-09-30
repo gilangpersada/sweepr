@@ -1,27 +1,28 @@
 // UI labels and colors for the file categories defined in `config/cleaner-rules.<os>.json`.
-// Keys missing here (added to the config later) fall back to the raw key and a gray color.
+// Keys missing here (added to the config later) fall back to the raw key and the "other" color.
+// Colors are the `--color-cat-*` tokens in `index.css`.
 import type { Messages } from "./i18n";
 
 interface CategoryStyle {
   label: string;
-  /** Tailwind background class for bars and legend dots. */
+  /** Tailwind background class for bars and legend swatches. */
   color: string;
 }
 
 const COLORS: Record<string, string> = {
-  video: "bg-rose-500",
-  photo: "bg-amber-500",
-  audio: "bg-fuchsia-500",
-  document: "bg-sky-500",
-  archive: "bg-emerald-500",
-  installer: "bg-orange-600",
-  code: "bg-indigo-500",
-  other: "bg-zinc-400 dark:bg-zinc-500",
+  video: "bg-cat-video",
+  photo: "bg-cat-photo",
+  audio: "bg-cat-audio",
+  document: "bg-cat-document",
+  archive: "bg-cat-archive",
+  installer: "bg-cat-installer",
+  code: "bg-cat-code",
+  other: "bg-cat-other",
 };
 
 export function categoryStyle(t: Messages, key: string): CategoryStyle {
   return {
     label: t.categories.names[key] ?? key,
-    color: COLORS[key] ?? "bg-zinc-300 dark:bg-zinc-600",
+    color: COLORS[key] ?? "bg-cat-other",
   };
 }

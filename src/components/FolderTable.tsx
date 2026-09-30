@@ -24,9 +24,12 @@ interface Props {
 }
 
 const ROW_HEIGHT = 36;
-// Shared by header and rows so the columns line up.
+// Shared by header and rows so the columns line up. The parent is a CSS container: when it is
+// narrow (window near its 800 px minimum, next to the sidebar) the file count column is dropped
+// and the percent column shows only the number.
 const GRID =
-  "grid grid-cols-[minmax(0,1fr)_6.5rem_10rem_6rem_7.5rem_4.5rem] items-center gap-3 px-3";
+  "grid grid-cols-[minmax(0,1fr)_6.5rem_10rem_6rem_7.5rem_4.5rem] @max-2xl:grid-cols-[minmax(0,1fr)_6rem_4.5rem_6.5rem_4rem] items-center gap-3 px-3";
+const WIDE_ONLY = "@max-2xl:hidden";
 
 type ColumnId = "name" | "size" | "percent" | "files" | "modified" | "actions";
 
@@ -34,7 +37,7 @@ const COLUMNS: { id: ColumnId; sortBy?: SortBy; align?: string }[] = [
   { id: "name", sortBy: "name" },
   { id: "size", sortBy: "size", align: "text-right" },
   { id: "percent", sortBy: "size" },
-  { id: "files", sortBy: "fileCount", align: "text-right" },
+  { id: "files", sortBy: "fileCount", align: `text-right ${WIDE_ONLY}` },
   { id: "modified", sortBy: "modified" },
   { id: "actions", align: "text-right" },
 ];
@@ -47,25 +50,25 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
     (i: number) => {
       const node = rows[i];
       if (!node) {
-        return <div className={`${GRID} h-full text-sm text-zinc-400`}>{t.table.loadingRow}</div>;
+        return <div className={`${GRID} h-full text-sm text-muted`}>{t.table.loadingRow}</div>;
       }
       const canOpen = node.isDir && node.hasChildren;
       return (
         <div
-          className={`${GRID} h-full border-b border-zinc-100 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/60`}
+          className={`${GRID} h-full border-b border-line/15 text-sm hover:bg-primary-soft`}
           onDoubleClick={() => canOpen && onOpen(node)}
         >
           <div role="cell" className="flex min-w-0 items-center gap-2">
             {node.isDir ? (
-              <FolderIcon className="size-4 shrink-0 text-amber-500" />
+              <FolderIcon className="size-4 shrink-0 fill-primary" />
             ) : (
-              <FileIcon className="size-4 shrink-0 text-zinc-400" />
+              <FileIcon className="size-4 shrink-0 text-muted" />
             )}
             {canOpen ? (
               <button
                 type="button"
                 onClick={() => onOpen(node)}
-                className="truncate text-left hover:text-blue-600 hover:underline dark:hover:text-blue-400"
+                className="truncate text-left font-medium hover:underline hover:decoration-2 hover:underline-offset-2"
                 title={node.name}
               >
                 {node.name}
@@ -76,24 +79,26 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
               </span>
             )}
           </div>
-          <div role="cell" className="text-right tabular-nums">
+          <div role="cell" className="text-right font-mono text-xs font-bold">
             {fmt.bytes(node.size)}
           </div>
           <div role="cell" className="flex items-center gap-2">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+            <div
+              className={`h-2.5 flex-1 overflow-hidden rounded-sm border border-line bg-surface ${WIDE_ONLY}`}
+            >
               <div
-                className="h-full bg-blue-600"
+                className="h-full bg-info"
                 style={{ width: `${Math.min(100, node.percentOfParent)}%` }}
               />
             </div>
-            <span className="w-12 text-right text-xs tabular-nums text-zinc-500">
+            <span className="w-12 text-right font-mono text-xs text-muted">
               {fmt.percent(node.percentOfParent)}
             </span>
           </div>
-          <div role="cell" className="text-right tabular-nums text-zinc-600 dark:text-zinc-400">
+          <div role="cell" className={`text-right font-mono text-xs text-muted ${WIDE_ONLY}`}>
             {node.isDir ? fmt.count(node.fileCount) : ""}
           </div>
-          <div role="cell" className="text-zinc-600 dark:text-zinc-400">
+          <div role="cell" className="truncate text-xs text-muted">
             {fmt.date(node.modified)}
           </div>
           <div role="cell">
@@ -117,7 +122,7 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
   const header = (
     <div
       role="row"
-      className={`${GRID} h-9 border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800`}
+      className={`${GRID} h-9 border-b-2 border-line bg-sunken text-xs font-bold uppercase tracking-wide`}
     >
       {COLUMNS.map((col) => {
         const label = t.table[col.id];
@@ -135,7 +140,7 @@ export function FolderTable({ scanId, nodeId, sort, onSortChange, onOpen, notify
               <button
                 type="button"
                 onClick={() => clickHeader(colSort)}
-                className="hover:text-zinc-900 dark:hover:text-zinc-100"
+                className="uppercase hover:underline hover:decoration-2 hover:underline-offset-2"
               >
                 {label}
                 {active && (sort.order === "asc" ? " ▲" : " ▼")}
