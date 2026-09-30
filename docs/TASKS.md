@@ -207,3 +207,43 @@ Tujuan: dari masukan pemilik setelah M5 (2026-09-30). Scan punya menu sendiri, B
 - [x] Bug: scrollbar jendela (kanan + bawah) berkedip setiap pindah menu. Penyebab: animasi masuk halaman (`PageView`, geser 16 px) sesaat membuat isi lebih lebar dari jendela. Perbaikan: `<main>` memotong isinya (`overflow-hidden`) dan `html, body` tidak pernah scroll; yang scroll hanya area di dalam halaman. Dicek lewat CDP: 7× pindah menu, lebar/tinggi dokumen tidak pernah melebihi jendela (selisih 0 px)
 - Otomatis: `cargo test` 85 lulus (89 − 4 tes "Buka file"), `clippy -D warnings`, `cargo fmt`, `typecheck`, `lint`, `prettier` bersih.
 - Cek di app (salinan uji terpisah, Claude lewat screenshot, tema gelap, 1100 px): logo + "Sweepr" di sidebar, "Good evening" + ikon bulan, kartu berikon, kartu "Recycle Bin", ikon roda gigi, Pengaturan rata kiri, kartu "Dipilih" di Pembersih tetap terlihat di bawah saat detail aturan dibuka. Daftar file kategori tanpa "Buka file" belum dilihat (perlu scan).
+
+## M7 — Lewati file cloud, cache developer tambahan, file besar lama (setelah M6)
+Tujuan: dari masukan pemilik (2026-09-30). Sweepr 100% offline, jadi file OneDrive "hanya online" tidak dipindai sama sekali; Pembersih menemukan lebih banyak cache developer; file besar yang lama tidak diubah bisa ditemukan dan dipindah ke Recycle Bin dengan aman. Hardlink dan size on disk lainnya **di luar cakupan**. Keputusan: D-042 s/d D-044 (jawaban Q1–Q5). Tiap dependency baru diusulkan dulu.
+
+**Lewati file cloud / hanya online (D-042)**
+- [ ] Deteksi dari atribut yang sudah terbaca saat scan (`FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS`, `RECALL_ON_OPEN`, `OFFLINE`), tanpa syscall tambahan, tanpa membuka file dan **tanpa memicu unduhan**. Fungsi murni di `platform/windows.rs` (`is_cloud_only(attrs)`), cfg-gated (OS lain: selalu `false`)
+- [ ] Scanner: file/folder hanya-online **tidak dimasukkan ke tree** (tidak dihitung ukuran/jumlah file, tidak tampil di tabel, File Terbesar, Kategori, file besar lama) dan tidak dimasuki; tidak dicatat sebagai "tidak bisa dibaca"
+- [ ] Pembersih: item hanya-online **tidak pernah** masuk preview dan ditolak lagi saat eksekusi (membuangnya tidak mengosongkan disk dan ikut menghapus di OneDrive); tes
+- [ ] Tes: fungsi atribut (semua kombinasi), scan melewati file cloud palsu (lewat hook atribut yang bisa diganti di tes), pembersih menolak item cloud
+- [ ] Cek manual: di OneDrive, satu file "Free up space" (hanya online) + satu "Always keep on this device" → scan → hanya file lokal yang terhitung; file online tidak terunduh (ikon awan di Explorer tetap)
+
+**Cache developer tambahan (D-043)**
+- [ ] Rule per project (item = folder, sama seperti `node_modules`): `target/` Rust (penanda `Cargo.toml`), `.next/` (penanda `package.json`), dengan umur minimum seperti rule `node_modules`
+- [ ] Rule cache global (item = **seluruh isi folder cache sebagai satu item folder**, bukan ribuan file): cache npm (`%LOCALAPPDATA%\npm-cache`), cache pip (`%LOCALAPPDATA%\pip\cache`)
+- [ ] Bila perlu tipe `match` baru ("folder cache sebagai satu item"): folder itu harus tepat di dalam allowed root, bukan link, bukan folder terlindungi; tes wajib (SAFETY_RULES)
+- [ ] Semua rule baru: grup developer, risiko sedang, **tidak** dicentang otomatis; nama/deskripsi lewat i18n seperti rule lama
+- [ ] Tidak masuk M7: Gradle, registry Cargo, Yarn/NuGet/Android/Docker (ditambah nanti setelah dicek ukurannya di PC pemilik), `dist/`/`build/`, `node_modules` pnpm (D-022)
+- [ ] Tes: tiap rule cocok hanya dengan folder yang benar (penanda ada, cukup lama), tidak keluar dari allowed roots, tidak mengikuti junction, batas item, folder cache yang tidak ada → 0 item tanpa error
+
+**File besar yang lama tidak diubah (D-044)**
+- [ ] Backend: filter ukuran minimum + umur (tanggal diubah; tanggal akses di Windows sering tidak dicatat) pada query File Terbesar dari tree hasil scan, per halaman, tanpa scan ulang
+- [ ] UI: **filter di tab File Terbesar** (bukan tab baru): ukuran minimum (semua / 100 MB / 500 MB / 1 GB) dan umur (semua / 3 / 6 / 12 bulan); total ukuran + jumlah yang cocok
+- [ ] **Pindahkan ke Recycle Bin** dari daftar ini: centang file → backend membuat preview (ID + path + ukuran + tanggal diubah dari tree) → konfirmasi seperti Pembersih → eksekusi dengan ID preview. Backend memvalidasi ulang setiap path (denylist/`safety.rs`, bukan link, masih ada, ukuran/tanggal tidak berubah sejak scan, batas Recycle Bin per drive), tidak pernah dicentang otomatis, hanya file (bukan folder), dicatat di log (`"action":"trash"`, sumber `largeFiles`)
+- [ ] Setelah dipindah: baris hilang dari daftar dan ukuran folder di hasil scan dikurangi (atau tandai hasil scan "perlu scan ulang" — putuskan saat implementasi, catat di DECISIONS)
+- [ ] Tes: filter ukuran/umur, file tanpa tanggal, sort + paging; preview: ID tak dikenal/kedaluwarsa, file berubah sejak scan, path terlindungi, link, batas item → ditolak
+
+**Penutup**
+- [ ] Semua teks baru lewat i18n (`id.ts` + `en.ts`)
+- [ ] Perbarui `PRD.md` §9, `ARCHITECTURE.md` (command baru), `SAFETY_RULES.md` (file cloud, rule baru, hapus dari File Terbesar), `DECISIONS.md`, `ROADMAP.md`
+- [ ] `cargo test`, `clippy`, `typecheck`, `lint`, `prettier` bersih; cek manual di Windows dicatat di sini
+
+**Selesai jika:** file OneDrive yang hanya online tidak dipindai dan tidak pernah dibuang; rule cache developer baru menemukan dan membuang cache ke Recycle Bin dengan aman; file besar yang lama tidak diubah bisa difilter dan dipindah ke Recycle Bin lewat preview + konfirmasi; semua tes lulus.
+
+## M8 — Treemap, peringatan drive hampir penuh, file duplikat (setelah M7)
+Tujuan: fitur visual dan pemantauan dari ROADMAP. Rencana rinci + pertanyaan terbuka ditulis di awal M8; butuh dependency baru, diusulkan dulu (hard rule 7).
+- [ ] Di awal M8: keluarkan treemap, widget tray/notifikasi, dan duplikat dari daftar "Out of scope for MVP" di `CLAUDE.md` dan `PRD.md` (saat ini masih tercantum di sana)
+- [ ] **Treemap** di Hasil Scan: kotak berwarna seukuran folder/file untuk folder di breadcrumb, klik masuk folder, tooltip nama + ukuran + %. Data per level dari `get_children` (tidak mengirim seluruh tree); canvas atau SVG tanpa library berat; bisa dipakai dengan keyboard
+- [ ] **Peringatan drive hampir penuh:** ikon tray (sisa ruang tiap drive), notifikasi Windows saat melewati ambang (mis. < 10%), ambang di Pengaturan, bisa dimatikan. Perlu fitur tray Tauri + plugin notifikasi (dependency, tanya dulu); tetap tanpa jaringan
+- [ ] **File duplikat:** kelompokkan berdasarkan ukuran → hash sebagian → hash penuh (usulan BLAKE3, dependency baru); pilih mana yang dipertahankan (minimal satu salinan selalu tersisa, dijaga backend); buang ke Recycle Bin lewat ID dari preview backend seperti pembersih; tes keamanan
+- [ ] Docs + tes + cek manual seperti milestone sebelumnya

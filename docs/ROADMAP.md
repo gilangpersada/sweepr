@@ -8,14 +8,12 @@ Urutan ini usulan, bukan janji. Ubah sesuai apa yang benar-benar terpakai.
 |---|---|---|
 | v0.1.x | **Redesign UI (M5)** — sudah dikerjakan | Menu sidebar per fitur, gaya Neo-Brutalism, animasi `motion`, loading screen. Lihat `TASKS.md` M5, D-031 s/d D-037. |
 | v0.1.x | **Menu Scan, isi Recycle Bin, file per kategori (M6)** | Beranda jadi aksi cepat, menu Scan sendiri, daftar + pulihkan item Recycle Bin, daftar file per kategori + label bar. Lihat `TASKS.md` M6, D-038 s/d D-040. |
-| v0.2 | **Treemap / sunburst** | Visual kotak berwarna; klik untuk masuk folder. Pakai canvas/SVG dari data `get_children`. |
-| v0.2 | **Rescan cepat** | Scan ulang hanya subfolder yang dipilih. |
-| v0.3 | **Deteksi file duplikat** | Kelompokkan berdasarkan ukuran → hash sebagian → hash penuh (BLAKE3). Pilih mana yang dipertahankan. |
-| v0.3 | **File besar jarang dibuka** | Filter: > X GB dan tidak diakses > N hari. Cocok untuk video mentah lama. |
+| v0.2 | **Lewati file cloud, cache developer tambahan, file besar lama (M7)** | File "hanya online" tidak dipindai dan tidak pernah dibuang; rule `target/`, `.next/`, cache npm/pip; filter file besar lama di File Terbesar + pindah ke Recycle Bin. Lihat `TASKS.md` M7, D-042 s/d D-044. |
+| v0.2 | **Treemap, peringatan drive hampir penuh, file duplikat (M8)** | Treemap dari data `get_children`; ikon tray + notifikasi ambang; duplikat: ukuran → hash sebagian → hash penuh (BLAKE3). Lihat `TASKS.md` M8. |
+| v0.3 | **Rescan cepat** | Scan ulang hanya subfolder yang dipilih. |
 | v0.4 | **Riwayat scan** | Simpan snapshot ringkas (SQLite); tampilkan folder yang tumbuh cepat. |
 | v0.4 | **Cache browser & app** | Rule tambahan dengan peringatan (login/sesi bisa hilang). |
-| v0.4 | **Cache Developer tambahan** | Rule grup developer lain: `target/` (Rust), `.next/`, `dist/`/`build/` lama, cache Gradle/pip. Plus dukungan `node_modules` pnpm (saat ini dikecualikan karena berisi junction, D-022) — perlu verifikasi perilaku Recycle Bin terhadap junction dulu. |
-| v0.5 | **Widget tray + peringatan drive hampir penuh** | Ikon tray, sisa ruang tiap drive, notifikasi ambang batas. |
+| v0.4 | **Cache developer lanjutan** | `dist/`/`build/` lama dan `node_modules` pnpm (junction, D-022) — perlu verifikasi perilaku Recycle Bin terhadap junction dulu. |
 | v0.5 | **Mode pembersih: aman / sedang / agresif** | Preset yang mengatur rule mana dicentang. |
 | v0.6 | **Port ke macOS** | Full Disk Access, `cleaner-rules.macos.json`, `~/Library/Caches`, Xcode DerivedData, Trash. |
 | v0.7 | **Mode cepat MFT (Windows/NTFS)** | Baca MFT langsung; butuh admin; jauh lebih cepat. Bonus khusus Windows. |

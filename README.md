@@ -1,46 +1,56 @@
 # Sweepr
 
-Aplikasi desktop untuk memindai penyimpanan PC, menunjukkan folder/file apa yang memakan ruang, dan membantu membebaskan ruang dengan aman.
+A desktop app that scans your PC's storage, shows which folders and files take up the most space, and helps you free space safely.
 
-- **Platform MVP:** Windows 10/11 (struktur disiapkan untuk macOS)
+- **MVP platform:** Windows 10/11 (the code is structured so a macOS port stays possible)
 - **Stack:** Tauri 2 (Rust) + React + TypeScript + Vite
-- **Status:** Pra-MVP — M0–M3 selesai; M4 (poles & rilis pribadi): installer jadi, menunggu 2 minggu pemakaian; M5 (redesign UI) sudah di-merge; M6 (menu Scan, Beranda aksi cepat, isi + pulihkan Recycle Bin, file per kategori) dikerjakan, tinggal cek manual
-- **Prasyarat:** Node ≥ 22.12, Rust stable (MSVC), Visual Studio Build Tools (C++)
+- **Status:** Pre-MVP.
+  - Done: M0–M3, M5 (UI redesign) and M6 (Scan menu, quick-action Home, Recycle Bin list + restore, files per category). M6 still needs the owner's manual checks.
+  - M4 (polish & private release): the installer is ready; waiting on two weeks of real use.
+  - Next: M7 (skip cloud-only files, more developer caches, old large files), then M8 (treemap, low-disk alerts, duplicate files).
+- **Prerequisites:** Node ≥ 22.12, Rust stable (MSVC), Visual Studio Build Tools (C++)
+- **Fully local:** no network calls, no telemetry. Cleaning moves files to the Recycle Bin; the only permanent delete is "Empty Recycle Bin".
 
-## Isi folder ini
+## What is in this repo
 
-| File | Fungsi |
-|---|---|
-| `CLAUDE.md` | Aturan & konteks utama untuk Claude Code / AI coding agent |
-| `docs/PRD.md` | Product Requirements Document untuk MVP |
-| `docs/ARCHITECTURE.md` | Rancangan teknis: modul, command, event, model data |
-| `docs/SAFETY_RULES.md` | Aturan keselamatan hapus file (WAJIB dipatuhi) |
-| `docs/TASKS.md` | Pecahan pekerjaan MVP per milestone + kriteria selesai |
-| `docs/ROADMAP.md` | Fitur berikutnya & ide project lain |
-| `docs/DECISIONS.md` | Catatan keputusan & pertanyaan terbuka |
-| `docs/START_PROMPT.md` | Prompt awal untuk memulai di Claude Code |
-| `config/cleaner-rules.windows.json` | Aturan pembersih Windows (data, bukan kode) |
-| `config/cleaner-rules.macos.json` | Stub untuk macOS (belum dipakai di MVP) |
+The project docs are written in Indonesian.
 
-## Menjalankan saat pengembangan
+| File                                | Purpose                                                 |
+| ----------------------------------- | ------------------------------------------------------- |
+| `CLAUDE.md`                         | Main rules and context for Claude Code / AI coding agents |
+| `docs/PRD.md`                       | Product requirements for the MVP                        |
+| `docs/ARCHITECTURE.md`              | Technical design: modules, commands, events, data model |
+| `docs/SAFETY_RULES.md`              | File deletion safety rules (MUST be followed)           |
+| `docs/TASKS.md`                     | MVP work split into milestones + definition of done     |
+| `docs/ROADMAP.md`                   | Upcoming features and other project ideas               |
+| `docs/DECISIONS.md`                 | Decision log and open questions                         |
+| `docs/START_PROMPT.md`              | Starting prompt for Claude Code                         |
+| `config/cleaner-rules.windows.json` | Windows cleaner rules (data, not code)                  |
+| `config/cleaner-rules.macos.json`   | macOS stub (not used in the MVP)                        |
+
+## Running in development
 
 ```
 npm install
 npm run tauri dev
 ```
 
-Cek sebelum commit: `npm run lint && npm run typecheck`, `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings`, `cargo test --manifest-path src-tauri/Cargo.toml`.
+Before committing, run:
 
-## Membuat & memasang installer (Windows)
+- `npm run lint && npm run typecheck`
+- `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings`
+- `cargo test --manifest-path src-tauri/Cargo.toml`
 
-1. `npm run tauri build` — build pertama mengunduh tool NSIS dari GitHub (hanya saat build).
-2. Hasil: `src-tauri/target/release/bundle/nsis/Sweepr_<versi>_x64-setup.exe`.
-3. Jalankan installer. Terpasang per mesin di `C:\Program Files\Sweepr`, **butuh hak admin** (prompt UAC, D-030). App sendiri tetap berjalan sebagai pengguna biasa.
-4. Installer belum ditandatangani, jadi Windows SmartScreen menampilkan "Windows protected your PC": klik **More info → Run anyway**.
-5. Uninstall lewat **Settings → Apps → Installed apps → Sweepr** (juga meminta admin).
+## Building and installing (Windows)
 
-Log pembersihan: `%LOCALAPPDATA%\com.sweepr.app\logs\cleanup.jsonl`.
+1. Run `npm run tauri build`. The first build downloads the NSIS tools from GitHub (only at build time).
+2. The installer is written to `src-tauri/target/release/bundle/nsis/Sweepr_<version>_x64-setup.exe`.
+3. Run the installer. It installs per machine to `C:\Program Files\Sweepr` and **needs admin rights** (UAC prompt, D-030). The app itself runs as a normal user.
+4. The installer is not signed yet, so Windows SmartScreen shows "Windows protected your PC". Click **More info → Run anyway**.
+5. To uninstall, go to **Settings → Apps → Installed apps → Sweepr** (this also asks for admin rights).
 
-## Bekerja dengan Claude Code
+Cleanup log: `%LOCALAPPDATA%\com.sweepr.app\logs\cleanup.jsonl`.
 
-Kerjakan satu milestone per sesi dari `docs/TASKS.md`. Prompt awal proyek ada di `docs/START_PROMPT.md`.
+## Working with Claude Code
+
+Work on one milestone per session from `docs/TASKS.md`. The project's starting prompt is in `docs/START_PROMPT.md`.
