@@ -177,8 +177,8 @@ Tujuan: dari masukan pemilik setelah M5 (2026-09-30). Scan punya menu sendiri, B
 **File per kategori (D-040)**
 - [x] Backend: `get_category_files(scan_id, node_id, category, sort, offset, limit)`: file kategori itu di bawah folder breadcrumb, per halaman (seperti `get_children`), tanpa mengirim seluruh daftar sekaligus
 - [x] Tes: hasil hanya berisi kategori yang diminta, ikut subtree folder, sort + paging benar, kategori tak dikenal → error
-- [x] UI: klik baris kategori (atau segmen bar) → daftar file kategori itu (nama, lokasi, ukuran, tanggal) dengan aksi **Buka file**, **Buka di Explorer**, **Salin path**; kembali ke ringkasan kategori
-- [x] "Buka file" lewat backend dengan `node_id` (bukan path dari frontend), dibuka dengan aplikasi bawaan Windows. File yang bisa dijalankan (daftar ekstensi di config: `.exe`, `.msi`, `.bat`, `.cmd`, `.ps1`, `.vbs`, `.lnk`, `.scr`, `.com`, ...) tidak diberi tombol ini dan ditolak backend; hanya "Buka di Explorer". Tes penolakannya
+- [x] UI: klik baris kategori (atau segmen bar) → daftar file kategori itu (nama, lokasi, ukuran, tanggal) dengan aksi **Buka file**, **Buka di Explorer**, **Salin path**; kembali ke ringkasan kategori _(Buka file dihapus di revisi akhir, D-041)_
+- [x] "Buka file" lewat backend dengan `node_id` (bukan path dari frontend), dibuka dengan aplikasi bawaan Windows. File yang bisa dijalankan (daftar ekstensi di config: `.exe`, `.msi`, `.bat`, `.cmd`, `.ps1`, `.vbs`, `.lnk`, `.scr`, `.com`, ...) tidak diberi tombol ini dan ditolak backend; hanya "Buka di Explorer". Tes penolakannya _(dihapus di revisi akhir, D-041)_
 - [x] Bar kategori: label nama + persentase di dalam segmen yang cukup lebar, legenda di bawah bar untuk segmen kecil, tooltip lengkap (nama, ukuran, persen, jumlah file) di setiap segmen; bisa difokus dengan keyboard
 
 **Penutup**
@@ -204,5 +204,6 @@ Tujuan: dari masukan pemilik setelah M5 (2026-09-30). Scan punya menu sendiri, B
 - [x] Ikon Pengaturan → roda gigi
 - [x] Pembersih: bar "Dipilih + Lanjut ke konfirmasi" → kartu melayang (sticky) di dalam area daftar, selebar daftar
 - [x] "Buka file" dihapus seluruhnya: tombol, command `open_file`, `executable_extensions` di config, `ScanError::NotAFile`/`Executable`, 4 tesnya
+- [x] Bug: scrollbar jendela (kanan + bawah) berkedip setiap pindah menu. Penyebab: animasi masuk halaman (`PageView`, geser 16 px) sesaat membuat isi lebih lebar dari jendela. Perbaikan: `<main>` memotong isinya (`overflow-hidden`) dan `html, body` tidak pernah scroll; yang scroll hanya area di dalam halaman. Dicek lewat CDP: 7× pindah menu, lebar/tinggi dokumen tidak pernah melebihi jendela (selisih 0 px)
 - Otomatis: `cargo test` 85 lulus (89 − 4 tes "Buka file"), `clippy -D warnings`, `cargo fmt`, `typecheck`, `lint`, `prettier` bersih.
 - Cek di app (salinan uji terpisah, Claude lewat screenshot, tema gelap, 1100 px): logo + "Sweepr" di sidebar, "Good evening" + ikon bulan, kartu berikon, kartu "Recycle Bin", ikon roda gigi, Pengaturan rata kiri, kartu "Dipilih" di Pembersih tetap terlihat di bawah saat detail aturan dibuka. Daftar file kategori tanpa "Buka file" belum dilihat (perlu scan).

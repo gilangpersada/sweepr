@@ -99,7 +99,8 @@ export function AppShell({ page, onNavigate, hasResult, scan, onCancel, children
         </AnimatePresence>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+      {/* Clips the page slide-in so it never widens the window (no scrollbar flash). */}
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
     </div>
   );
 }

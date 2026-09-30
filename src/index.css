@@ -149,6 +149,9 @@
 html,
 body {
   @apply bg-canvas font-sans text-ink;
+  /* The app shell fills the window; only the scroll areas inside a page scroll. Without this
+     the page slide-in (PageView, 16 px) briefly overflows and flashes window scrollbars. */
+  overflow: hidden;
 }
 
 /* Visible keyboard focus everywhere (M5: "fokus selalu terlihat"). */
